@@ -1,0 +1,42 @@
+@model List<dsa_project.Models.TimetableAssignment>
+
+<div class="container mt-4">
+    <h2>Generated Timetable</h2>
+    <hr />
+    
+    <a href="/Timetable/Index" class="btn btn-secondary mb-3">Back to Home</a>
+    
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Class</th>
+                    <th>Course Code</th>
+                    <th>Teacher</th>
+                    <th>Room</th>
+                    <th>Time Slot</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td style="font-weight:bold;">@item.ClassName</td>
+                        <td>@item.CourseName</td>
+                        <td>@item.TeacherName</td>
+                        <td>
+                            <span class="badge bg-success">@item.RoomName</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">@item.TimeSlotInfo</span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="alert alert-info mt-3">
+        <strong>Statistics:</strong> Total Assignments: @Model.Count
+    </div>
+</div>

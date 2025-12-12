@@ -1,0 +1,97 @@
+C:\Users\User\Desktop\dsa project\bin\Debug\net9.0\appsettings.Development.json
+C:\Users\User\Desktop\dsa project\bin\Debug\net9.0\appsettings.json
+C:\Users\User\Desktop\dsa project\bin\Debug\net9.0\dsa project.staticwebassets.runtime.json
+C:\Users\User\Desktop\dsa project\bin\Debug\net9.0\dsa project.staticwebassets.endpoints.json
+C:\Users\User\Desktop\dsa project\bin\Debug\net9.0\dsa project.exe
+C:\Users\User\Desktop\dsa project\bin\Debug\net9.0\dsa project.deps.json
+C:\Users\User\Desktop\dsa project\bin\Debug\net9.0\dsa project.runtimeconfig.json
+C:\Users\User\Desktop\dsa project\bin\Debug\net9.0\dsa project.dll
+C:\Users\User\Desktop\dsa project\bin\Debug\net9.0\dsa project.pdb
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\dsa project.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\dsa project.AssemblyInfoInputs.cache
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\dsa project.AssemblyInfo.cs
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\dsa project.csproj.CoreCompileInputs.cache
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\dsa project.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\dsa project.RazorAssemblyInfo.cache
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\dsa project.RazorAssemblyInfo.cs
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\scopedcss\bundle\dsa project.styles.css
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\scopedcss\projectbundle\dsa project.bundle.scp.css
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\cu3m3bcrrk-b9sayid5wm.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\dwlui5752z-61n19gt1b8.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\bkhuxkaqp2-xtxxf3hu2r.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\rmq8ip9ayv-bqjiyaj88i.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\3z000i6urg-c2jlpeoesf.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\8giclld9xc-erw9l3u2r3.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\c5i8orv7zv-aexeepp0ev.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\i0qe835kpy-d7shbmvgxk.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\4askvf97mk-ausgxo2sd3.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\doppgv0khx-k8d9w2qqmf.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\tfbg1vcy65-cosvhxvwiu.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\qqg47g04gm-ub07r2b239.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\fudhromltw-fvhpjtyr6v.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\n32zyr5lak-b7pk76d08c.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\g4nbsbp30n-fsbi9cje9m.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\ly14piwt0k-rzd6atqjts.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\uzfexvnibd-ee0r1s7dh0.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\n9ektvb9lb-dxx9fxp4il.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\z0zyecjxxa-jd9uben2k1.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\0aux84sysh-khv3u5hwcm.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\b9hbn115kx-r4e9w2rdcm.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\mztss7hito-lcd1t2u6c8.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\4nhyaua2wm-c2oey78nd0.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\rsol71cnx6-tdbxkamptv.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\sumepox0u4-j5mq2jizvt.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\dublcjckyx-06098lyss8.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\tdveoqfud8-nvvlpmu67g.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\afqgyqckgq-s35ty4nyc5.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\dnawnb9xp0-pj5nd1wqec.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\8q84on1txl-46ein0sx1k.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\498ql44fea-v0zj4ognzu.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\7ajl2k8da3-37tfw0ft22.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\fhtl21yghx-hrwsygsryq.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\s80p0fddaw-pk9g2wxc8p.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\06q6p441cl-ft3s53vfgj.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\p9g28t6vat-6cfz1n2cew.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\xrf28a1sc1-6pdc2jztkx.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\wy7yropznt-493y06b0oq.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\9yed3g4125-iovd86k7lj.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\t44zbcc04t-vr1egmr9el.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\61c36yznv6-kbrnm935zg.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\8fb978ig4g-jj8uyg4cgr.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\j2i6lp0aql-y7v9cxd14o.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\o3siw08omy-notf2xhcfb.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\iy2jxydlz2-h1s4sie4z3.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\ydg877us1y-63fj8s7r0e.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\62n5myol2d-0j3bgjxly4.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\sg4th01mkd-47otxtyo56.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\jfhqj55ru3-4v8eqarkd7.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\6gouqn8oqr-356vix0kms.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\ebpk5yi2az-83jwlth58m.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\fimt0bwt9s-mrlpezrjn3.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\575gdt1qqb-lzl9nlhx6b.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\vby1lmdhat-ag7o75518u.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\1man7hacon-x0q3zqp4vz.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\xdntriiv5w-0i3buxo5is.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\vllntry2qj-o1o13a6vjx.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\7m8s6pgkdb-ttgo8qnofa.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\uy7y1a74cc-2z0ns9nrw6.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\sk1c8vufrr-muycvpuwrr.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\nbqgo6tbch-87fc7y1x7t.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\ffcroebrq1-mlv21k5csn.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\exkng1rotn-x5n86b8pbe.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\compressed\t187rp7xbx-x5n86b8pbe.gz
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\staticwebassets.build.json
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\staticwebassets.development.json
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\staticwebassets.build.endpoints.json
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\staticwebassets\msbuild.dsa project.Microsoft.AspNetCore.StaticWebAssets.props
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\staticwebassets\msbuild.dsa project.Microsoft.AspNetCore.StaticWebAssetEndpoints.props
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\staticwebassets\msbuild.build.dsa project.props
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\staticwebassets\msbuild.buildMultiTargeting.dsa project.props
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\staticwebassets\msbuild.buildTransitive.dsa project.props
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\staticwebassets.pack.json
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\dsa project.dll
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\refint\dsa project.dll
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\dsa project.pdb
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\dsa project.genruntimeconfig.cache
+C:\Users\User\Desktop\dsa project\obj\Debug\net9.0\ref\dsa project.dll

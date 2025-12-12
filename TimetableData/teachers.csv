@@ -1,0 +1,3 @@
+Id,Name,EmployeeId,Type,AvailableSlots,AssignedCourses
+1,Majid Kaleem,Emp-01,Permanent,1;2;3,1;2
+2,Ms. Sana,Emp-02,Visiting,2;3,3

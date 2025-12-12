@@ -1,0 +1,12 @@
+@model dsa_project.Models.Course
+<div class="container mt-5">
+    <h2>Add Course</h2>
+    @if(ViewBag.Message != null){ <div class="alert alert-success">@ViewBag.Message</div> }
+    <form method="post">
+        <label>Code (e.g. CS101):</label> <input asp-for="Code" class="form-control" required />
+        <label>Title:</label> <input asp-for="Title" class="form-control" required />
+        <label>Credit Hours:</label> <input asp-for="CreditHours" type="number" class="form-control" required />
+        <button class="btn btn-success mt-2">Save</button>
+        <a href="/Timetable/Index" class="btn btn-secondary mt-2">Back</a>
+    </form>
+</div>

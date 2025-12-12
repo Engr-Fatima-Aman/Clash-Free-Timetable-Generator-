@@ -1,0 +1,16 @@
+@model dsa_project.Models.Teacher
+<div class="container mt-5">
+    <h2>Add Teacher</h2>
+    @if(ViewBag.Message != null){ <div class="alert alert-success">@ViewBag.Message</div> }
+    <form method="post">
+        <label>Name:</label> <input asp-for="Name" class="form-control" required />
+        <label>Employee ID:</label> <input asp-for="EmployeeId" class="form-control" required />
+        <label>Type (Permanent/Visiting):</label> <input asp-for="Type" class="form-control" required />
+        <label>Assigned Course IDs (comma separated, e.g. 1,2):</label> 
+        <input name="AssignedCoursesStr" class="form-control" required />
+        <label>Available Slot IDs (comma separated, e.g. 1,2,3):</label> 
+        <input name="AvailableSlotsStr" class="form-control" required />
+        <button class="btn btn-success mt-2">Save</button>
+        <a href="/Timetable/Index" class="btn btn-secondary mt-2">Back</a>
+    </form>
+</div>

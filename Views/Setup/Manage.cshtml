@@ -1,0 +1,128 @@
+@model dsa_project.Models.ManageViewModel
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Manage Existing Data</h2>
+        <a href="/Timetable/Index" class="btn btn-secondary">Back to Home</a>
+    </div>
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Courses</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead><tr><th>ID</th><th>Code</th><th>Title</th><th>Actions</th></tr></thead>
+                <tbody>
+                    @foreach(var item in Model.Courses) {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td>@item.Code</td>
+                            <td>@item.Title</td>
+                            <td>
+                                <a href="/Setup/EditCourse?id=@item.Id" class="btn btn-sm btn-warning">Edit</a>
+                                <a href="/Setup/DeleteCourse?id=@item.Id" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this Course?');">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Teachers</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Actions</th></tr></thead>
+                <tbody>
+                    @foreach(var item in Model.Teachers) {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td>@item.Name</td>
+                            <td>@item.Type</td>
+                            <td>
+                                <a href="/Setup/EditTeacher?id=@item.Id" class="btn btn-sm btn-warning">Edit</a>
+                                <a href="/Setup/DeleteTeacher?id=@item.Id" class="btn btn-sm btn-danger" onclick="return confirm('Delete this Teacher?');">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Rooms</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead><tr><th>ID</th><th>Room Number</th><th>Capacity</th><th>Actions</th></tr></thead>
+                <tbody>
+                    @foreach(var item in Model.Rooms) {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td>@item.RoomNumber</td>
+                            <td>@item.Capacity</td>
+                            <td>
+                                <a href="/Setup/EditRoom?id=@item.Id" class="btn btn-sm btn-warning">Edit</a>
+                                <a href="/Setup/DeleteRoom?id=@item.Id" class="btn btn-sm btn-danger" onclick="return confirm('Delete this Room?');">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">Time Slots</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead><tr><th>ID</th><th>Day</th><th>Time</th><th>Actions</th></tr></thead>
+                <tbody>
+                    @foreach(var item in Model.TimeSlots) {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td>@item.Day</td>
+                            <td>@item.StartTime - @item.EndTime</td>
+                            <td>
+                                <a href="/Setup/EditTimeSlot?id=@item.Id" class="btn btn-sm btn-warning">Edit</a>
+                                <a href="/Setup/DeleteTimeSlot?id=@item.Id" class="btn btn-sm btn-danger" onclick="return confirm('Delete this Slot?');">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Classes</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0">
+                <thead><tr><th>ID</th><th>Name</th><th>Students</th><th>Actions</th></tr></thead>
+                <tbody>
+                    @foreach(var item in Model.Classes) {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td>@item.Name</td>
+                            <td>@item.TotalStudents</td>
+                            <td>
+                                <a href="/Setup/EditClass?id=@item.Id" class="btn btn-sm btn-warning">Edit</a>
+                                <a href="/Setup/DeleteClass?id=@item.Id" class="btn btn-sm btn-danger" onclick="return confirm('Delete this Class?');">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
