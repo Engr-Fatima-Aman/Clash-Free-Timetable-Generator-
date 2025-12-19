@@ -1,4 +1,4 @@
 Id,Code,Title,CreditHours,PrerequisiteId
-2,CS-102,Programming Fund,4,0
-3,MT-101,Calculus,3,0
-4,4040,maths,3,0
+1,CS-101,Programming Fund,3,0
+2,CS-102,Programming Lab,1,0
+3,MT-101,Calculus,2,0

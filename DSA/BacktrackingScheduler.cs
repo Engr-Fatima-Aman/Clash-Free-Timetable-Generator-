@@ -5,206 +5,188 @@ using dsa_project.Models;
 
 namespace dsa_project.DSA
 {
-    // Backtracking Algorithm with Graph Integration
-    // Time Complexity: O(k^(n/m)) with constraint pruning
     public class BacktrackingScheduler
     {
-        private ConstraintValidator validator;
-        private ConflictGraph conflictGraph;
-        private List<TimetableAssignment> solution;
-        private BacktrackingStack backtrackStack;
-        private int backtrackCount;
-        private int assignmentAttempts;
-        private CourseHashTable courseTable;
-        private TeacherHashTable teacherTable;
-        private ClassHashTable classTable;
-        private RoomHashTable roomTable;
-        private TimeSlotHashTable timeSlotTable;
+        private readonly ConstraintValidator _validator;
+        private readonly CourseHashTable _courseTable;
+        private readonly TeacherHashTable _teacherTable;
+        private readonly RoomHashTable _roomTable;
         
-        public int BacktrackCount { get; private set; } = 0;
-        public int AssignmentAttempts { get; private set; } = 0;
-        public string LastFailureReason { get; private set; } = null;
+        // Sorted Slots list (zaroori hai consecutive check ke liye)
+        private readonly List<TimeSlot> _sortedSlots; 
 
-
-        public BacktrackingScheduler(CourseHashTable courses, TeacherHashTable teachers,
-                RoomHashTable rooms, TimeSlotHashTable timeSlots, ClassHashTable classes)
+        public BacktrackingScheduler(CourseHashTable courses, TeacherHashTable teachers, RoomHashTable rooms, TimeSlotHashTable timeSlots, ClassHashTable classes)
         {
-            courseTable = courses;
-            teacherTable = teachers;
-            classTable = classes;
-            roomTable = rooms;
-            timeSlotTable = timeSlots;
-            validator = new ConstraintValidator(courses, teachers, rooms, classes);
-            conflictGraph = new ConflictGraph();
-            solution = new List<TimetableAssignment>();
-            backtrackStack = new BacktrackingStack();
-            backtrackCount = 0;
-            assignmentAttempts = 0;
-        }
-
-        // Main algorithm entry point
-        public List<TimetableAssignment> GenerateTimetable(List<Class> classesToSchedule)
-        {
-            solution.Clear();
-            validator.ClearAssignments();
-            backtrackCount = 0;
-            assignmentAttempts = 0;
-            conflictGraph.Clear();
-
-            // Build conflict graph from courses
-            BuildConflictGraph(classesToSchedule);
-
-            // Apply graph coloring as heuristic
-            var coloring = new GraphColoringAlgorithm(conflictGraph);
-            coloring.ColorGraph(timeSlotTable.Count());
-
-            // Perform backtracking
-            // NOTE: Logic assumes we are scheduling classes sequentially.
-            if (Backtrack(0, classesToSchedule))
-            {
-                return solution;
-            }
-            return null;
-        }
-
-        // Build conflict graph - courses that cannot be at same time are connected
-        private void BuildConflictGraph(List<Class> classes)
-        {
-            var allCourses = courseTable.GetAllCourses();
-
-            // Add nodes for each course
-            foreach (var course in allCourses)
-            {
-                conflictGraph.AddNode(course.Id, course.Code, NodeType.Course);
-            }
-
-            // Add edges: courses conflict if same teacher or in same class
-            foreach (var course1 in allCourses)
-            {
-                foreach (var course2 in allCourses)
-                {
-                    if (course1.Id < course2.Id)
-                    {
-                        bool conflict = false;
-
-                        // Check if courses share a teacher
-                        var teachers1 = teacherTable.GetAllTeachers()
-                            .Where(t => t.AssignedCourseIds.Contains(course1.Id)).ToList();
-                        var teachers2 = teacherTable.GetAllTeachers()
-                            .Where(t => t.AssignedCourseIds.Contains(course2.Id)).ToList();
-
-                        if (teachers1.Any(t => teachers2.Any(t2 => t2.Id == t.Id)))
-                            conflict = true;
-
-                        // Check if courses in same class
-                        foreach (var cls in classes)
-                        {
-                            if (cls.CourseIds.Contains(course1.Id) &&
-                                cls.CourseIds.Contains(course2.Id))
-                                conflict = true;
-                        }
-
-                        if (conflict)
-                            conflictGraph.AddConflict(course1.Id, course2.Id);
-                    }
-                }
-            }
-        }
-
-        // Recursive backtracking algorithm
-        private bool Backtrack(int classIndex, List<Class> classesToSchedule)
-        {
-            // Base case: all classes scheduled
-            if (classIndex == classesToSchedule.Count)
-            {
-                return true;
-            }
-
-            Class currentClass = classesToSchedule[classIndex];
-
-            // ---------------------------------------------------------
-            // IMPORTANT FIX: 
-            // Original logic might skip courses if strictly class-based recursion is used incorrectly.
-            // Assuming here we iterate through ALL courses of the current class.
-            // Ideally, we should flatten the list of tasks to (Class, Course) pairs,
-            // but keeping original structure for now.
-            // ---------------------------------------------------------
-
-            // Try to assign each course in this class
-            // WARNING: Simple foreach here with recursive return inside might only schedule the FIRST valid course of the class.
-            // For a robust solution, this part usually needs to recurse *per course*, not *per class*.
-            // However, keeping your provided logic structure:
+            _courseTable = courses;
+            _teacherTable = teachers;
+            _roomTable = rooms;
             
-            foreach (int courseId in currentClass.CourseIds)
+            // Validator ko sahi parameters pass kar rahe hain
+            _validator = new ConstraintValidator(courses, teachers, rooms, classes);
+            
+            // Slots ko Day aur Time ke hisaab se sort kar rahe hain
+            _sortedSlots = timeSlots.GetAllTimeSlots()
+                            .OrderBy(s => s.Day)
+                            .ThenBy(s => s.StartTime)
+                            .ToList();
+        }
+
+        public List<TimetableAssignment> GenerateTimetable(List<Class> classes)
+        {
+            var allTasks = new List<LectureTask>();
+
+            // 1. DATA PREPARATION: Class -> Courses -> Tasks
+            foreach (var cls in classes)
             {
-                var teachersForCourse = GetTeachersForCourse(courseId);
+                if (cls.CourseIds == null) continue;
 
-                foreach (Teacher teacher in teachersForCourse)
+                foreach (var courseId in cls.CourseIds)
                 {
-                    foreach (int timeSlotId in teacher.AvailableTimeSlots)
+                    var course = _courseTable.GetCourseById(courseId);
+                    // Find Teacher
+                    var teacher = _teacherTable.GetAllTeachers()
+                                    .FirstOrDefault(t => t.AssignedCourseIds.Contains(courseId));
+
+                    if (course != null && teacher != null)
                     {
-                        var availableRooms = GetAvailableRooms();
-
-                        foreach (Room room in availableRooms)
+                        // === SMART LOGIC: Credit Hours Handling ===
+                        
+                        // Check if Lab (Name mein 'Lab' ho ya 1 Credit Hour ho)
+                        bool isLab = course.Title.ToLower().Contains("lab") || 
+                                     (course.CreditHours == 1 && course.Title.ToLower().Contains("lab"));
+                        
+                        if (isLab)
                         {
-                            assignmentAttempts++;
-
-                            var assignment = new TimetableAssignment
-                            {
-                                ClassId = currentClass.Id,
-                                CourseId = courseId,
-                                TeacherId = teacher.Id,
-                                RoomId = room.Id,
-                                TimeSlotId = timeSlotId
-                            };
-
-                            // Validate assignment against all constraints
-                            if (validator.ValidateAssignment(assignment))
-                            {
-                                // Add to solution
-                                solution.Add(assignment);
-                                backtrackStack.Push(assignment);
-                                validator.AddAssignment(assignment);
-
-                                // Recursively try next class
-                                // (Note: This logic implies 1 course per class per backtrack step. 
-                                // If classes have multiple courses, this needs a loop or different recursion depth)
-                                if (Backtrack(classIndex + 1, classesToSchedule))
-                                {
-                                    return true;
-                                }
-
-                                // Backtrack: remove assignment
-                                solution.Remove(assignment);
-                                backtrackStack.Pop();
-                                validator.RemoveAssignment(assignment);
-                                backtrackCount++;
-                            }
+                            // Lab: 3 Hours Straight
+                            allTasks.Add(new LectureTask { Class = cls, Course = course, Teacher = teacher, Duration = 3 });
+                        }
+                        else if (course.CreditHours == 3)
+                        {
+                            // Theory 3 CH: Split -> 2 Hours + 1 Hour
+                            allTasks.Add(new LectureTask { Class = cls, Course = course, Teacher = teacher, Duration = 2 });
+                            allTasks.Add(new LectureTask { Class = cls, Course = course, Teacher = teacher, Duration = 1 });
+                        }
+                        else if (course.CreditHours == 2)
+                        {
+                            // Theory 2 CH: 2 Hours Straight
+                            allTasks.Add(new LectureTask { Class = cls, Course = course, Teacher = teacher, Duration = 2 });
+                        }
+                        else
+                        {
+                            // Default: 1 Hour blocks (jitne credit hours utne blocks)
+                            for(int k=0; k < course.CreditHours; k++)
+                                allTasks.Add(new LectureTask { Class = cls, Course = course, Teacher = teacher, Duration = 1 });
                         }
                     }
                 }
             }
 
-            return false;
-        }
+            // Optimization: Bari duration wale tasks pehle schedule karein
+            allTasks = allTasks.OrderByDescending(t => t.Duration)
+                               .ThenByDescending(t => t.Class.TotalStudents)
+                               .ToList();
 
-        private List<Teacher> GetTeachersForCourse(int courseId)
-        {
-            var result = new List<Teacher>();
-            foreach (var teacher in teacherTable.GetAllTeachers())
+            var assignments = new List<TimetableAssignment>();
+            
+            // Start Backtracking Algorithm
+            if (Solve(0, allTasks, assignments))
             {
-                if (teacher.AssignedCourseIds.Contains(courseId))
-                    result.Add(teacher);
+                return assignments;
             }
-            return result;
+
+            return null; // Failure
         }
 
-        private List<Room> GetAvailableRooms()
+        // --- RECURSIVE FUNCTION ---
+        private bool Solve(int index, List<LectureTask> tasks, List<TimetableAssignment> assignments)
         {
-            return roomTable.GetAllRooms();
+            // Base Case: Agar saare tasks schedule ho gaye
+            if (index >= tasks.Count) return true; 
+
+            var currentTask = tasks[index];
+            var rooms = _roomTable.GetAllRooms();
+
+            // Try Every Room
+            foreach (var room in rooms)
+            {
+                // Constraint: Room Capacity Check
+                if (room.Capacity < currentTask.Class.TotalStudents) continue; 
+
+                // Try Every Time Slot (Sorted List mein loop)
+                for (int i = 0; i < _sortedSlots.Count; i++)
+                {
+                    // Check: Kya yahan se aage 'Duration' amount ke slots valid hain?
+                    var proposedSlots = new List<TimeSlot>();
+                    bool sequencePossible = true;
+
+                    for (int d = 0; d < currentTask.Duration; d++)
+                    {
+                        // Bounds check
+                        if (i + d >= _sortedSlots.Count) { sequencePossible = false; break; }
+
+                        var s1 = _sortedSlots[i + d];
+                        
+                        // Check Continuity:
+                        if (d > 0)
+                        {
+                            var prev = _sortedSlots[i + d - 1];
+                            // Agar Din badal gaya (Mon -> Tue)
+                            if (s1.Day != prev.Day) { sequencePossible = false; break; } 
+                            // Agar Gap hai (> 10 mins)
+                            if ((s1.StartTime - prev.EndTime).TotalMinutes > 10) { sequencePossible = false; break; } 
+                        }
+                        proposedSlots.Add(s1);
+                    }
+
+                    if (!sequencePossible) continue; // Ye start point sahi nahi hai
+
+                    // VALIDATION: Kya Room/Teacher in sab slots par free hain?
+                    bool allValid = true;
+                    var tempAssignments = new List<TimetableAssignment>();
+
+                    foreach (var slot in proposedSlots)
+                    {
+                        var assign = new TimetableAssignment
+                        {
+                            ClassId = currentTask.Class.Id,
+                            CourseId = currentTask.Course.Id,
+                            TeacherId = currentTask.Teacher.Id,
+                            RoomId = room.Id,
+                            TimeSlotId = slot.Id
+                        };
+
+                        if (!_validator.ValidateAssignment(assign, assignments))
+                        {
+                            allValid = false; 
+                            break;
+                        }
+                        tempAssignments.Add(assign);
+                    }
+
+                    if (allValid)
+                    {
+                        // 1. ASSIGN (Temporary add)
+                        assignments.AddRange(tempAssignments);
+
+                        // 2. RECURSE (Next task try karein)
+                        if (Solve(index + 1, tasks, assignments)) return true;
+
+                        // 3. BACKTRACK (Fail hua to wapis hatayen)
+                        foreach (var a in tempAssignments) assignments.Remove(a);
+                    }
+                }
+            }
+
+            return false; // Koi solution nahi mila
         }
 
-        public int GetBacktrackCount() => backtrackCount;
-        public int GetAssignmentAttempts() => assignmentAttempts;
+        // Helper Class (Is file ke andar hi rahega)
+        private class LectureTask
+        {
+            public Class Class { get; set; }
+            public Course Course { get; set; }
+            public Teacher Teacher { get; set; }
+            public int Duration { get; set; } // 1, 2, or 3 hours
+        }
     }
 }

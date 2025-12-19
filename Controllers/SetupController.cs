@@ -29,6 +29,46 @@ namespace dsa_project.Controllers
             _dataService.SaveAllData(c, t, r, ts, cl, new List<TimetableAssignment>());
         }
 
+        // ==========================================
+        //  ⚡ NEW FEATURE: AUTO GENERATE TIME SLOTS
+        // ==========================================
+        public IActionResult AutoGenerateSlots()
+        {
+            LoadAllData(out var c, out var t, out var r, out var ts, out var cl);
+
+            var days = new List<DayOfWeek> { 
+                DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, 
+                DayOfWeek.Thursday, DayOfWeek.Friday 
+            };
+
+            int startHour = 8; // 8:00 AM
+            int endHour = 16;  // 4:00 PM (16:00)
+            int idCounter = ts.Count() + 1;
+
+            foreach (var day in days)
+            {
+                for (int h = startHour; h < endHour; h++)
+                {
+                    // Check: Agar ye slot pehle se hai to duplicate na banaye
+                    if (ts.GetAllTimeSlots().Any(s => s.Day == day && s.StartTime.Hours == h)) 
+                        continue;
+
+                    var slot = new TimeSlot
+                    {
+                        Id = idCounter++,
+                        Day = day,
+                        StartTime = new TimeSpan(h, 0, 0),    // Example: 8:00
+                        EndTime = new TimeSpan(h + 1, 0, 0)   // Example: 9:00
+                    };
+                    ts.AddTimeSlot(slot);
+                }
+            }
+
+            SaveAllData(c, t, r, ts, cl);
+            // Wapis Manage page par bhej denge taake user dekh sake
+            return RedirectToAction("Manage");
+        }
+
         // ============================
         // 1. ADD DATA ACTIONS (Create)
         // ============================
@@ -193,7 +233,6 @@ namespace dsa_project.Controllers
             var teacher = t.GetTeacherById(id);
             if (teacher == null) return RedirectToAction("Manage");
 
-            // Convert lists to comma-separated strings for the View
             ViewBag.AvailableSlotsStr = string.Join(",", teacher.AvailableTimeSlots);
             ViewBag.AssignedCoursesStr = string.Join(",", teacher.AssignedCourseIds);
 
