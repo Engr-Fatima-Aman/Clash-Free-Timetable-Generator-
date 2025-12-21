@@ -1,11 +1,43 @@
 @model dsa_project.Models.Room
+
 <div class="container mt-5">
-    <h2>Add Room</h2>
-    @if(ViewBag.Message != null){ <div class="alert alert-success">@ViewBag.Message</div> }
-    <form method="post">
-        <label>Room Number:</label> <input asp-for="RoomNumber" class="form-control" required />
-        <label>Capacity:</label> <input asp-for="Capacity" type="number" class="form-control" required />
-        <button class="btn btn-success mt-2">Save</button>
-        <a href="/Timetable/Index" class="btn btn-secondary mt-2">Back</a>
-    </form>
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-success text-white text-center">
+            <h3 class="mb-0">🚪 Add New Room</h3>
+        </div>
+        <div class="card-body p-4">
+            @if(ViewBag.Message != null)
+            { 
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @ViewBag.Message
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div> 
+            }
+            
+            <form method="post">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Room Number / Name:</label> 
+                    <input asp-for="RoomNumber" class="form-control form-control-lg" placeholder="e.g. Room-101 or Lab-01" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Seating Capacity:</label> 
+                    <input asp-for="Capacity" type="number" class="form-control" placeholder="e.g. 50" required />
+                </div>
+
+                <div class="form-check form-switch mb-4">
+                    <input type="checkbox" asp-for="IsLabRoom" class="form-check-input" id="roomLabCheckbox" style="transform: scale(1.2);" />
+                    <label class="form-check-label ms-2 fw-bold" for="roomLabCheckbox">
+                        Is this a Laboratory Room?
+                    </label>
+                    <div class="text-info small">Enable this if the room has computers or lab equipment.</div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success btn-lg shadow">✅ Save Room</button>
+                    <a href="/Setup/Manage" class="btn btn-outline-secondary">Back to Manage</a>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>

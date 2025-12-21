@@ -5,26 +5,25 @@ using dsa_project.Models;
 
 namespace dsa_project.DSA
 {
-    // Backtracking Algorithm with Graph Integration
-    // Time Complexity: O(k^(n/m)) with constraint pruning
+    public class SchedulingTask
+    {
+        public int ClassId { get; set; }
+        public int CourseId { get; set; }
+        public int RequiredHours { get; set; }
+        public bool IsLab { get; set; }
+    }
+
     public class BacktrackingScheduler
     {
-        private ConstraintValidator validator;
-        private ConflictGraph conflictGraph;
         private List<TimetableAssignment> solution;
-        private BacktrackingStack backtrackStack;
-        private int backtrackCount;
-        private int assignmentAttempts;
         private CourseHashTable courseTable;
         private TeacherHashTable teacherTable;
         private ClassHashTable classTable;
         private RoomHashTable roomTable;
         private TimeSlotHashTable timeSlotTable;
         
-        public int BacktrackCount { get; private set; } = 0;
-        public int AssignmentAttempts { get; private set; } = 0;
-        public string LastFailureReason { get; private set; } = null;
-
+        private int assignmentAttempts = 0;
+        private const int MAX_ATTEMPTS = 2000000;
 
         public BacktrackingScheduler(CourseHashTable courses, TeacherHashTable teachers,
                 RoomHashTable rooms, TimeSlotHashTable timeSlots, ClassHashTable classes)
@@ -34,177 +33,151 @@ namespace dsa_project.DSA
             classTable = classes;
             roomTable = rooms;
             timeSlotTable = timeSlots;
-            validator = new ConstraintValidator(courses, teachers, rooms, classes);
-            conflictGraph = new ConflictGraph();
             solution = new List<TimetableAssignment>();
-            backtrackStack = new BacktrackingStack();
-            backtrackCount = 0;
-            assignmentAttempts = 0;
         }
 
-        // Main algorithm entry point
         public List<TimetableAssignment> GenerateTimetable(List<Class> classesToSchedule)
         {
             solution.Clear();
-            validator.ClearAssignments();
-            backtrackCount = 0;
             assignmentAttempts = 0;
-            conflictGraph.Clear();
 
-            // Build conflict graph from courses
-            BuildConflictGraph(classesToSchedule);
+            // Tasks ko priority dena: Pehle Labs phir lambay slots (3h, 2h, 1h)
+            var tasks = CreateSchedulingTasks(classesToSchedule)
+                        .OrderByDescending(t => t.IsLab) 
+                        .ThenByDescending(t => t.RequiredHours) 
+                        .ToList();
 
-            // Apply graph coloring as heuristic
-            var coloring = new GraphColoringAlgorithm(conflictGraph);
-            coloring.ColorGraph(timeSlotTable.Count());
-
-            // Perform backtracking
-            // NOTE: Logic assumes we are scheduling classes sequentially.
-            if (Backtrack(0, classesToSchedule))
+            if (Backtrack(0, tasks))
             {
                 return solution;
             }
+            
             return null;
         }
 
-        // Build conflict graph - courses that cannot be at same time are connected
-        private void BuildConflictGraph(List<Class> classes)
+        private bool Backtrack(int taskIndex, List<SchedulingTask> tasks)
         {
-            var allCourses = courseTable.GetAllCourses();
+            if (assignmentAttempts > MAX_ATTEMPTS) return false;
+            if (taskIndex == tasks.Count) return true;
 
-            // Add nodes for each course
-            foreach (var course in allCourses)
-            {
-                conflictGraph.AddNode(course.Id, course.Code, NodeType.Course);
-            }
-
-            // Add edges: courses conflict if same teacher or in same class
-            foreach (var course1 in allCourses)
-            {
-                foreach (var course2 in allCourses)
-                {
-                    if (course1.Id < course2.Id)
-                    {
-                        bool conflict = false;
-
-                        // Check if courses share a teacher
-                        var teachers1 = teacherTable.GetAllTeachers()
-                            .Where(t => t.AssignedCourseIds.Contains(course1.Id)).ToList();
-                        var teachers2 = teacherTable.GetAllTeachers()
-                            .Where(t => t.AssignedCourseIds.Contains(course2.Id)).ToList();
-
-                        if (teachers1.Any(t => teachers2.Any(t2 => t2.Id == t.Id)))
-                            conflict = true;
-
-                        // Check if courses in same class
-                        foreach (var cls in classes)
-                        {
-                            if (cls.CourseIds.Contains(course1.Id) &&
-                                cls.CourseIds.Contains(course2.Id))
-                                conflict = true;
-                        }
-
-                        if (conflict)
-                            conflictGraph.AddConflict(course1.Id, course2.Id);
-                    }
-                }
-            }
-        }
-
-        // Recursive backtracking algorithm
-        private bool Backtrack(int classIndex, List<Class> classesToSchedule)
-        {
-            // Base case: all classes scheduled
-            if (classIndex == classesToSchedule.Count)
-            {
-                return true;
-            }
-
-            Class currentClass = classesToSchedule[classIndex];
-
-            // ---------------------------------------------------------
-            // IMPORTANT FIX: 
-            // Original logic might skip courses if strictly class-based recursion is used incorrectly.
-            // Assuming here we iterate through ALL courses of the current class.
-            // Ideally, we should flatten the list of tasks to (Class, Course) pairs,
-            // but keeping original structure for now.
-            // ---------------------------------------------------------
-
-            // Try to assign each course in this class
-            // WARNING: Simple foreach here with recursive return inside might only schedule the FIRST valid course of the class.
-            // For a robust solution, this part usually needs to recurse *per course*, not *per class*.
-            // However, keeping your provided logic structure:
+            var currentTask = tasks[taskIndex];
+            var teachers = GetTeachersForCourse(currentTask.CourseId);
             
-            foreach (int courseId in currentClass.CourseIds)
+            // Rooms filter: Lab course hai toh Lab room, warna normal room
+            var rooms = roomTable.GetAllRooms()
+                         .Where(r => r.IsLabRoom == currentTask.IsLab)
+                         .OrderBy(r => Guid.NewGuid()).ToList();
+            
+            // Slots filter: Duration aur EndTime check
+            var allSlots = timeSlotTable.GetAllTimeSlots()
+                            .Where(s => Math.Abs(s.DurationInHours - currentTask.RequiredHours) < 0.1)
+                            .Where(s => {
+                                if (currentTask.IsLab) 
+                                    return s.EndTime <= new TimeSpan(17, 30, 0);
+                                else 
+                                    return s.EndTime <= new TimeSpan(16, 30, 0);
+                            })
+                            .OrderBy(s => Guid.NewGuid()).ToList();
+
+            foreach (var teacher in teachers)
             {
-                var teachersForCourse = GetTeachersForCourse(courseId);
-
-                foreach (Teacher teacher in teachersForCourse)
+                foreach (var slot in allSlots)
                 {
-                    foreach (int timeSlotId in teacher.AvailableTimeSlots)
+                    // Aik hi din mein aik hi course do baar nahi hona chahiye (Except Labs)
+                    if (!currentTask.IsLab && IsCourseAlreadyScheduledOnDay(currentTask.CourseId, currentTask.ClassId, slot.Day))
+                        continue;
+
+                    foreach (var room in rooms)
                     {
-                        var availableRooms = GetAvailableRooms();
-
-                        foreach (Room room in availableRooms)
+                        assignmentAttempts++;
+                        
+                        if (IsSafe(currentTask, teacher.Id, room.Id, slot))
                         {
-                            assignmentAttempts++;
-
-                            var assignment = new TimetableAssignment
-                            {
-                                ClassId = currentClass.Id,
-                                CourseId = courseId,
+                            var assignment = new TimetableAssignment {
+                                ClassId = currentTask.ClassId,
+                                CourseId = currentTask.CourseId,
                                 TeacherId = teacher.Id,
                                 RoomId = room.Id,
-                                TimeSlotId = timeSlotId
+                                TimeSlotId = slot.Id,
+                                ClassName = classTable.GetClassById(currentTask.ClassId).Name,
+                                Section = classTable.GetClassById(currentTask.ClassId).Section,
+                                CourseName = courseTable.GetCourseById(currentTask.CourseId).Title,
+                                TeacherName = teacher.Name,
+                                RoomName = room.RoomNumber,
+                                TimeSlotInfo = $"{slot.Day} ({slot.StartTime:hh\\:mm} - {slot.EndTime:hh\\:mm})"
                             };
 
-                            // Validate assignment against all constraints
-                            if (validator.ValidateAssignment(assignment))
-                            {
-                                // Add to solution
-                                solution.Add(assignment);
-                                backtrackStack.Push(assignment);
-                                validator.AddAssignment(assignment);
-
-                                // Recursively try next class
-                                // (Note: This logic implies 1 course per class per backtrack step. 
-                                // If classes have multiple courses, this needs a loop or different recursion depth)
-                                if (Backtrack(classIndex + 1, classesToSchedule))
-                                {
-                                    return true;
-                                }
-
-                                // Backtrack: remove assignment
-                                solution.Remove(assignment);
-                                backtrackStack.Pop();
-                                validator.RemoveAssignment(assignment);
-                                backtrackCount++;
-                            }
+                            solution.Add(assignment);
+                            if (Backtrack(taskIndex + 1, tasks)) return true;
+                            solution.Remove(assignment); // Backtrack step
                         }
                     }
                 }
             }
-
             return false;
+        }
+
+        private bool IsSafe(SchedulingTask task, int teacherId, int roomId, TimeSlot newSlot)
+        {
+            // O(N) check for collisions
+            foreach (var existing in solution)
+            {
+                var existingSlot = timeSlotTable.GetTimeSlotById(existing.TimeSlotId);
+
+                if (existingSlot.Day == newSlot.Day)
+                {
+                    // Standard collision check logic
+                    bool timeOverlaps = newSlot.StartTime < existingSlot.EndTime && 
+                                       newSlot.EndTime > existingSlot.StartTime;
+
+                    if (timeOverlaps)
+                    {
+                        if (existing.TeacherId == teacherId) return false;
+                        if (existing.RoomId == roomId) return false;
+                        if (existing.ClassId == task.ClassId) return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        private List<SchedulingTask> CreateSchedulingTasks(List<Class> classes)
+        {
+            var tasks = new List<SchedulingTask>();
+            foreach (var cls in classes)
+            {
+                foreach (var courseId in cls.CourseIds)
+                {
+                    var course = courseTable.GetCourseById(courseId);
+                    if (course == null) continue;
+
+                    if (course.IsLab)
+                        tasks.Add(new SchedulingTask { ClassId = cls.Id, CourseId = courseId, RequiredHours = 3, IsLab = true });
+                    else if (course.CreditHours == 3)
+                    {
+                        // 3 credit hours = 2h slot + 1h slot
+                        tasks.Add(new SchedulingTask { ClassId = cls.Id, CourseId = courseId, RequiredHours = 2, IsLab = false });
+                        tasks.Add(new SchedulingTask { ClassId = cls.Id, CourseId = courseId, RequiredHours = 1, IsLab = false });
+                    }
+                    else
+                    {
+                        tasks.Add(new SchedulingTask { ClassId = cls.Id, CourseId = courseId, RequiredHours = (int)course.CreditHours, IsLab = false });
+                    }
+                }
+            }
+            return tasks;
+        }
+
+        private bool IsCourseAlreadyScheduledOnDay(int courseId, int classId, DayOfWeek day)
+        {
+            return solution.Any(a => a.CourseId == courseId && 
+                                     a.ClassId == classId && 
+                                     timeSlotTable.GetTimeSlotById(a.TimeSlotId).Day == day);
         }
 
         private List<Teacher> GetTeachersForCourse(int courseId)
         {
-            var result = new List<Teacher>();
-            foreach (var teacher in teacherTable.GetAllTeachers())
-            {
-                if (teacher.AssignedCourseIds.Contains(courseId))
-                    result.Add(teacher);
-            }
-            return result;
+            return teacherTable.GetAllTeachers().Where(t => t.AssignedCourseIds.Contains(courseId)).ToList();
         }
-
-        private List<Room> GetAvailableRooms()
-        {
-            return roomTable.GetAllRooms();
-        }
-
-        public int GetBacktrackCount() => backtrackCount;
-        public int GetAssignmentAttempts() => assignmentAttempts;
     }
 }

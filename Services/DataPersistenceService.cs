@@ -9,7 +9,6 @@ namespace dsa_project.Services
 {
     public class DataPersistenceService
     {
-        // Web app mein ye folder project ki root directory mein banega
         private const string DATA_FOLDER = "TimetableData";
         private const string COURSES_FILE = "courses.csv";
         private const string TEACHERS_FILE = "teachers.csv";
@@ -24,57 +23,14 @@ namespace dsa_project.Services
                 Directory.CreateDirectory(DATA_FOLDER);
         }
 
-        public bool SaveAllData(CourseHashTable courses, TeacherHashTable teachers,
-            RoomHashTable rooms, TimeSlotHashTable timeSlots, ClassHashTable classes,
-            List<TimetableAssignment> assignments)
-        {
-            try
-            {
-                SaveCourses(courses);
-                SaveTeachers(teachers);
-                SaveRooms(rooms);
-                SaveTimeSlots(timeSlots);
-                SaveClasses(classes);
-                SaveAssignments(assignments);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                // Web app mein MessageBox nahi chalta, isliye Console pe log karenge
-                Console.WriteLine($"Save failed: {ex.Message}");
-                return false;
-            }
-        }
-
-        public bool LoadAllData(CourseHashTable courses, TeacherHashTable teachers,
-            RoomHashTable rooms, TimeSlotHashTable timeSlots, ClassHashTable classes,
-            out List<TimetableAssignment> assignments)
-        {
-            assignments = new List<TimetableAssignment>();
-            try
-            {
-                LoadCourses(courses);
-                LoadTeachers(teachers);
-                LoadRooms(rooms);
-                LoadTimeSlots(timeSlots);
-                LoadClasses(classes);
-                LoadAssignments(out assignments);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                // Error ko server terminal par dikhayenge
-                Console.WriteLine($"Load failed: {ex.Message}");
-                return false;
-            }
-        }
-
+        // --- COURSES (Updated: Removed LabType) ---
         private void SaveCourses(CourseHashTable courses)
         {
-            var lines = new List<string> { "Id,Code,Title,CreditHours,PrerequisiteId" };
-            foreach (var course in courses.GetAllCourses())
+            // Header updated
+            var lines = new List<string> { "Id,Title,CreditHours,IsLab" };
+            foreach (var c in courses.GetAllCourses())
             {
-                lines.Add($"{course.Id},{course.Code},{course.Title},{course.CreditHours},{course.PrerequisiteId}");
+                lines.Add($"{c.Id},{c.Title},{c.CreditHours},{c.IsLab}");
             }
             File.WriteAllLines(Path.Combine(DATA_FOLDER, COURSES_FILE), lines);
         }
@@ -83,67 +39,29 @@ namespace dsa_project.Services
         {
             string path = Path.Combine(DATA_FOLDER, COURSES_FILE);
             if (!File.Exists(path)) return;
-
             var lines = File.ReadAllLines(path);
-            for (int i = 1; i < lines.Length; i++)
-            {
-                var parts = lines[i].Split(',');
-                courses.AddCourse(new Course
-                {
-                    Id = int.Parse(parts[0]),
-                    Code = parts[1],
-                    Title = parts[2],
-                    CreditHours = int.Parse(parts[3]),
-                    PrerequisiteId = int.Parse(parts[4])
-                });
+            for (int i = 1; i < lines.Length; i++) {
+                var p = lines[i].Split(',');
+                if (p.Length >= 4) { 
+                    try {
+                        courses.AddCourse(new Course { 
+                            Id = int.Parse(p[0]), 
+                            Title = p[1].Trim(), 
+                            CreditHours = int.Parse(p[2]), 
+                            IsLab = bool.Parse(p[3])
+                        });
+                    } catch { continue; }
+                }
             }
         }
 
-        private void SaveTeachers(TeacherHashTable teachers)
-        {
-            var lines = new List<string> { "Id,Name,EmployeeId,Type,AvailableSlots,AssignedCourses" };
-            foreach (var teacher in teachers.GetAllTeachers())
-            {
-                string slots = string.Join(";", teacher.AvailableTimeSlots);
-                string courses = string.Join(";", teacher.AssignedCourseIds);
-                lines.Add($"{teacher.Id},{teacher.Name},{teacher.EmployeeId},{teacher.Type},{slots},{courses}");
-            }
-            File.WriteAllLines(Path.Combine(DATA_FOLDER, TEACHERS_FILE), lines);
-        }
-
-        private void LoadTeachers(TeacherHashTable teachers)
-        {
-            string path = Path.Combine(DATA_FOLDER, TEACHERS_FILE);
-            if (!File.Exists(path)) return;
-
-            var lines = File.ReadAllLines(path);
-            for (int i = 1; i < lines.Length; i++)
-            {
-                var parts = lines[i].Split(',');
-                var teacher = new Teacher
-                {
-                    Id = int.Parse(parts[0]),
-                    Name = parts[1],
-                    EmployeeId = parts[2],
-                    Type = parts[3]
-                };
-
-                if (!string.IsNullOrEmpty(parts[4]))
-                    teacher.AvailableTimeSlots = parts[4].Split(';').Select(int.Parse).ToList();
-
-                if (parts.Length > 5 && !string.IsNullOrEmpty(parts[5]))
-                    teacher.AssignedCourseIds = parts[5].Split(';').Select(int.Parse).ToList();
-
-                teachers.AddTeacher(teacher);
-            }
-        }
-
+        // --- ROOMS (Updated: Removed LabType) ---
         private void SaveRooms(RoomHashTable rooms)
         {
-            var lines = new List<string> { "Id,RoomNumber,Capacity" };
-            foreach (var room in rooms.GetAllRooms())
+            var lines = new List<string> { "Id,RoomNumber,Capacity,IsLabRoom" };
+            foreach (var r in rooms.GetAllRooms())
             {
-                lines.Add($"{room.Id},{room.RoomNumber},{room.Capacity}");
+                lines.Add($"{r.Id},{r.RoomNumber},{r.Capacity},{r.IsLabRoom}");
             }
             File.WriteAllLines(Path.Combine(DATA_FOLDER, ROOMS_FILE), lines);
         }
@@ -152,56 +70,59 @@ namespace dsa_project.Services
         {
             string path = Path.Combine(DATA_FOLDER, ROOMS_FILE);
             if (!File.Exists(path)) return;
-
             var lines = File.ReadAllLines(path);
-            for (int i = 1; i < lines.Length; i++)
-            {
-                var parts = lines[i].Split(',');
-                rooms.AddRoom(new Room
-                {
-                    Id = int.Parse(parts[0]),
-                    RoomNumber = parts[1],
-                    Capacity = int.Parse(parts[2])
-                });
+            for (int i = 1; i < lines.Length; i++) {
+                var p = lines[i].Split(',');
+                if (p.Length >= 4) {
+                    try {
+                        rooms.AddRoom(new Room { 
+                            Id = int.Parse(p[0]), 
+                            RoomNumber = p[1].Trim(), 
+                            Capacity = int.Parse(p[2]),
+                            IsLabRoom = bool.Parse(p[3])
+                        });
+                    } catch { continue; }
+                }
             }
         }
 
-        private void SaveTimeSlots(TimeSlotHashTable timeSlots)
+        // --- TEACHERS, CLASSES, TIMESLOTS & ASSIGNMENTS (Same as before) ---
+        private void SaveTeachers(TeacherHashTable teachers)
         {
-            var lines = new List<string> { "Id,Day,StartTime,EndTime" };
-            foreach (var slot in timeSlots.GetAllTimeSlots())
+            var lines = new List<string> { "Id,Name,AssignedCourses" };
+            foreach (var t in teachers.GetAllTeachers())
             {
-                lines.Add($"{slot.Id},{slot.Day},{slot.StartTime},{slot.EndTime}");
+                string cIds = string.Join(";", t.AssignedCourseIds);
+                lines.Add($"{t.Id},{t.Name},{cIds}");
             }
-            File.WriteAllLines(Path.Combine(DATA_FOLDER, TIMESLOTS_FILE), lines);
+            File.WriteAllLines(Path.Combine(DATA_FOLDER, TEACHERS_FILE), lines);
         }
 
-        private void LoadTimeSlots(TimeSlotHashTable timeSlots)
+        private void LoadTeachers(TeacherHashTable teachers)
         {
-            string path = Path.Combine(DATA_FOLDER, TIMESLOTS_FILE);
+            string path = Path.Combine(DATA_FOLDER, TEACHERS_FILE);
             if (!File.Exists(path)) return;
-
             var lines = File.ReadAllLines(path);
-            for (int i = 1; i < lines.Length; i++)
-            {
-                var parts = lines[i].Split(',');
-                timeSlots.AddTimeSlot(new TimeSlot
-                {
-                    Id = int.Parse(parts[0]),
-                    Day = (DayOfWeek)Enum.Parse(typeof(DayOfWeek), parts[1]),
-                    StartTime = TimeSpan.Parse(parts[2]),
-                    EndTime = TimeSpan.Parse(parts[3])
-                });
+            for (int i = 1; i < lines.Length; i++) {
+                var p = lines[i].Split(',');
+                if (p.Length >= 2) {
+                    try {
+                        var t = new Teacher { Id = int.Parse(p[0]), Name = p[1].Trim() };
+                        if (p.Length > 2 && !string.IsNullOrWhiteSpace(p[2])) 
+                            t.AssignedCourseIds = p[2].Split(';').Select(s => int.Parse(s.Trim())).ToList();
+                        teachers.AddTeacher(t);
+                    } catch { continue; }
+                }
             }
         }
 
         private void SaveClasses(ClassHashTable classes)
         {
             var lines = new List<string> { "Id,Name,Semester,Section,TotalStudents,CourseIds" };
-            foreach (var cls in classes.GetAllClasses())
+            foreach (var c in classes.GetAllClasses())
             {
-                string courseIds = string.Join(";", cls.CourseIds);
-                lines.Add($"{cls.Id},{cls.Name},{cls.Semester},{cls.Section},{cls.TotalStudents},{courseIds}");
+                string cIds = string.Join(";", c.CourseIds);
+                lines.Add($"{c.Id},{c.Name},{c.Semester},{c.Section},{c.TotalStudents},{cIds}");
             }
             File.WriteAllLines(Path.Combine(DATA_FOLDER, CLASSES_FILE), lines);
         }
@@ -210,34 +131,57 @@ namespace dsa_project.Services
         {
             string path = Path.Combine(DATA_FOLDER, CLASSES_FILE);
             if (!File.Exists(path)) return;
-
             var lines = File.ReadAllLines(path);
-            for (int i = 1; i < lines.Length; i++)
-            {
-                var parts = lines[i].Split(',');
-                var cls = new Class
-                {
-                    Id = int.Parse(parts[0]),
-                    Name = parts[1],
-                    Semester = int.Parse(parts[2]),
-                    Section = char.Parse(parts[3]),
-                    TotalStudents = int.Parse(parts[4])
-                };
+            for (int i = 1; i < lines.Length; i++) {
+                var p = lines[i].Split(',');
+                if (p.Length >= 5) { 
+                    try {
+                        var c = new Class { 
+                            Id = int.Parse(p[0]), 
+                            Name = p[1].Trim(), 
+                            Semester = int.Parse(p[2]), 
+                            Section = p[3].Trim(), 
+                            TotalStudents = int.Parse(p[4]) 
+                        };
+                        if (p.Length > 5 && !string.IsNullOrWhiteSpace(p[5])) 
+                            c.CourseIds = p[5].Split(';').Select(s => int.Parse(s.Trim())).ToList();
+                        classes.AddClass(c);
+                    } catch { continue; }
+                }
+            }
+        }
 
-                if (parts.Length > 5 && !string.IsNullOrEmpty(parts[5]))
-                    cls.CourseIds = parts[5].Split(';').Select(int.Parse).ToList();
+        private void SaveTimeSlots(TimeSlotHashTable timeSlots)
+        {
+            var lines = new List<string> { "Id,Day,StartTime,EndTime" };
+            foreach (var s in timeSlots.GetAllTimeSlots())
+                lines.Add($"{s.Id},{s.Day},{s.StartTime},{s.EndTime}");
+            File.WriteAllLines(Path.Combine(DATA_FOLDER, TIMESLOTS_FILE), lines);
+        }
 
-                classes.AddClass(cls);
+        private void LoadTimeSlots(TimeSlotHashTable timeSlots)
+        {
+            string path = Path.Combine(DATA_FOLDER, TIMESLOTS_FILE);
+            if (!File.Exists(path)) return;
+            var lines = File.ReadAllLines(path);
+            for (int i = 1; i < lines.Length; i++) {
+                var p = lines[i].Split(',');
+                if (p.Length >= 4) {
+                    timeSlots.AddTimeSlot(new TimeSlot { 
+                        Id = int.Parse(p[0]), 
+                        Day = (DayOfWeek)Enum.Parse(typeof(DayOfWeek), p[1]), 
+                        StartTime = TimeSpan.Parse(p[2]), 
+                        EndTime = TimeSpan.Parse(p[3]) 
+                    });
+                }
             }
         }
 
         private void SaveAssignments(List<TimetableAssignment> assignments)
         {
-            var lines = new List<string> { "Id,ClassId,CourseId,TeacherId,RoomId,TimeSlotId" };
-            foreach (var assignment in assignments)
-            {
-                lines.Add($"{assignment.Id},{assignment.ClassId},{assignment.CourseId},{assignment.TeacherId},{assignment.RoomId},{assignment.TimeSlotId}");
-            }
+            var lines = new List<string> { "ClassId,ClassName,Section,CourseId,TeacherId,RoomId,TimeSlotId" };
+            foreach (var a in assignments)
+                lines.Add($"{a.ClassId},{a.ClassName},{a.Section},{a.CourseId},{a.TeacherId},{a.RoomId},{a.TimeSlotId}");
             File.WriteAllLines(Path.Combine(DATA_FOLDER, ASSIGNMENTS_FILE), lines);
         }
 
@@ -246,21 +190,39 @@ namespace dsa_project.Services
             assignments = new List<TimetableAssignment>();
             string path = Path.Combine(DATA_FOLDER, ASSIGNMENTS_FILE);
             if (!File.Exists(path)) return;
-
             var lines = File.ReadAllLines(path);
-            for (int i = 1; i < lines.Length; i++)
-            {
-                var parts = lines[i].Split(',');
-                assignments.Add(new TimetableAssignment
-                {
-                    Id = int.Parse(parts[0]),
-                    ClassId = int.Parse(parts[1]),
-                    CourseId = int.Parse(parts[2]),
-                    TeacherId = int.Parse(parts[3]),
-                    RoomId = int.Parse(parts[4]),
-                    TimeSlotId = int.Parse(parts[5])
-                });
+            for (int i = 1; i < lines.Length; i++) {
+                var p = lines[i].Split(',');
+                if (p.Length >= 7) {
+                    assignments.Add(new TimetableAssignment { 
+                        ClassId=int.Parse(p[0]), ClassName=p[1], Section=p[2], CourseId=int.Parse(p[3]), 
+                        TeacherId=int.Parse(p[4]), RoomId=int.Parse(p[5]), TimeSlotId=int.Parse(p[6]) 
+                    });
+                }
             }
+        }
+
+        public bool SaveAllData(CourseHashTable courses, TeacherHashTable teachers,
+            RoomHashTable rooms, TimeSlotHashTable timeSlots, ClassHashTable classes,
+            List<TimetableAssignment> assignments)
+        {
+            try {
+                SaveCourses(courses); SaveTeachers(teachers); SaveRooms(rooms);
+                SaveTimeSlots(timeSlots); SaveClasses(classes); SaveAssignments(assignments);
+                return true;
+            } catch { return false; }
+        }
+
+        public bool LoadAllData(CourseHashTable courses, TeacherHashTable teachers,
+            RoomHashTable rooms, TimeSlotHashTable timeSlots, ClassHashTable classes,
+            out List<TimetableAssignment> assignments)
+        {
+            assignments = new List<TimetableAssignment>();
+            try {
+                LoadCourses(courses); LoadTeachers(teachers); LoadRooms(rooms);
+                LoadTimeSlots(timeSlots); LoadClasses(classes); LoadAssignments(out assignments);
+                return true;
+            } catch { return false; }
         }
     }
 }

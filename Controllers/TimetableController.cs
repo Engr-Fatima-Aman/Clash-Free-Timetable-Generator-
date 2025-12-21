@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using dsa_project.Models;
@@ -9,74 +10,83 @@ namespace dsa_project.Controllers
 {
     public class TimetableController : Controller
     {
-        private readonly DataPersistenceService _dataService;
+        private readonly DataPersistenceService _persistenceService;
 
         public TimetableController()
         {
-            _dataService = new DataPersistenceService();
+            _persistenceService = new DataPersistenceService();
         }
 
-        // 1. Home Page (Jahan "Generate" button hoga)
         public IActionResult Index()
         {
-            return View();
+            var courses = new CourseHashTable();
+            var teachers = new TeacherHashTable();
+            var rooms = new RoomHashTable();
+            var timeSlots = new TimeSlotHashTable();
+            var classes = new ClassHashTable();
+            
+            _persistenceService.LoadAllData(courses, teachers, rooms, timeSlots, classes, out var assignments);
+
+            if (assignments == null) assignments = new List<TimetableAssignment>();
+
+            var groupedResult = assignments
+                .GroupBy(a => new { a.ClassName, a.Section })
+                .Cast<IGrouping<dynamic, TimetableAssignment>>()
+                .ToList();
+
+            return View(groupedResult);
         }
 
-        // 2. Button dabane par ye chalega
-        [HttpPost]
+        [HttpGet]
         public IActionResult Generate()
         {
-            // --- Step A: Data Load ---
-            var courseTable = new CourseHashTable();
-            var teacherTable = new TeacherHashTable();
-            var roomTable = new RoomHashTable();
-            var timeSlotTable = new TimeSlotHashTable();
-            var classTable = new ClassHashTable();
-            List<TimetableAssignment> existingAssignments;
+            var courses = new CourseHashTable();
+            var teachers = new TeacherHashTable();
+            var rooms = new RoomHashTable();
+            var timeSlots = new TimeSlotHashTable();
+            var classes = new ClassHashTable();
 
-            // File se real data load karne ki koshish
-            _dataService.LoadAllData(courseTable, teacherTable, roomTable, timeSlotTable, classTable, out existingAssignments);
+            _persistenceService.LoadAllData(courses, teachers, rooms, timeSlots, classes, out _);
 
-            // --- CHECK: Agar data empty hai to error dikhaye ---
-            // Ab hum dummy data nahi banayenge, user ko bolenge input de
-            if (courseTable.Count() == 0 || teacherTable.Count() == 0 || roomTable.Count() == 0 || classTable.Count() == 0)
+            if (timeSlots.GetAllTimeSlots().Count == 0)
             {
-                ViewBag.Error = "No Data Found! Please add Courses, Teachers, Rooms, and Classes first using the Input buttons.";
-                return View("Index");
-            }
-
-            // --- Step B: Algorithm Run ---
-            var scheduler = new BacktrackingScheduler(courseTable, teacherTable, roomTable, timeSlotTable, classTable);
-            var result = scheduler.GenerateTimetable(classTable.GetAllClasses());
-
-            if (result != null && result.Count > 0)
-            {
-                // Result ko View ke liye tayar karna (Names add karna)
-                foreach (var item in result)
+                int slotId = 1;
+                DayOfWeek[] days = { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday };
+                
+                foreach (var day in days)
                 {
-                    var cls = classTable.GetClassById(item.ClassId);
-                    var course = courseTable.GetCourseById(item.CourseId);
-                    var teacher = teacherTable.GetTeacherById(item.TeacherId);
-                    var room = roomTable.GetRoomById(item.RoomId);
-                    var slot = timeSlotTable.GetTimeSlotById(item.TimeSlotId);
+                    // Theory: 2 Hours (Calculated automatically by model)
+                    timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(8, 30, 0), EndTime = new TimeSpan(10, 30, 0) });
+                    timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(10, 30, 0), EndTime = new TimeSpan(12, 30, 0) });
+                    timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(13, 30, 0), EndTime = new TimeSpan(15, 30, 0) });
 
-                    item.ClassName = cls?.Name ?? "Unknown";
-                    item.CourseName = course?.Code ?? "Unknown";
-                    item.TeacherName = teacher?.Name ?? "Unknown";
-                    item.RoomName = room?.RoomNumber ?? "Unknown";
-                    item.TimeSlotInfo = slot != null ? $"{slot.Day} {slot.StartTime:hh\\:mm}" : "Unknown";
+                    // Theory: 1 Hour
+                    timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(15, 30, 0), EndTime = new TimeSpan(16, 30, 0) });
+                    timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(12, 30, 0), EndTime = new TimeSpan(13, 30, 0) });
+
+                    // Lab: 3 Hours
+                    timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(9, 0, 0), EndTime = new TimeSpan(12, 0, 0) });
+                    timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(14, 0, 0), EndTime = new TimeSpan(17, 0, 0) });
                 }
-
-                // --- Step C: Save Result (Optional) ---
-                _dataService.SaveAllData(courseTable, teacherTable, roomTable, timeSlotTable, classTable, result);
-
-                return View("Result", result);
             }
-            else
+
+            var scheduler = new BacktrackingScheduler(courses, teachers, rooms, timeSlots, classes);
+            var result = scheduler.GenerateTimetable(classes.GetAllClasses());
+
+            if (result != null && result.Any())
             {
-                ViewBag.Error = "Conflict! Could not generate timetable. Please check constraints (e.g., teacher availability vs class time).";
-                return View("Index");
+                _persistenceService.SaveAllData(courses, teachers, rooms, timeSlots, classes, result);
+                
+                var groupedResult = result
+                    .GroupBy(a => new { a.ClassName, a.Section })
+                    .Cast<IGrouping<dynamic, TimetableAssignment>>()
+                    .ToList();
+
+                return View("Index", groupedResult); 
             }
+
+            TempData["Error"] = "Scheduling Failed! Check console for attempts.";
+            return RedirectToAction("Index", "Home");
         }
     }
 }

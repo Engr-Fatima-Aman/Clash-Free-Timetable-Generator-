@@ -1,4 +1,10 @@
-Id,Code,Title,CreditHours,PrerequisiteId
-2,CS-102,Programming Fund,4,0
-3,MT-101,Calculus,3,0
-4,4040,maths,3,0
+Id,Title,CreditHours,IsLab
+1,Applied Calculus & Analytical Geometry,3,False
+2,Computing Fundamentals Lab,1,True
+3,Applied Physics,3,False
+4,Functional English,3,False
+5,Computer Programming,3,False
+6,Computing Fundamentals,2,False
+7,Computer Programming Lab,1,True
+8,Occupational Health and Safety,1,False
+9,Applied Physics Lab,1,True

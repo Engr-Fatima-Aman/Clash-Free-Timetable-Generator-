@@ -1,3 +1,10 @@
-Id,Name,EmployeeId,Type,AvailableSlots,AssignedCourses
-1,Majid Kaleem,Emp-01,Permanent,1;2;3,1;2
-2,Ms. Sana,Emp-02,Visiting,2;3,3
+Id,Name,AssignedCourses
+1,Ms Mehak Ismaill,1
+2,Sir Hamza,2
+3,Engr. Faizan Ali Siddiqui,3
+4,Ms Hina Manzoor,4
+5,Engr. Muhammad Faisal,5
+6,Engr. Zoobia,6
+7,Ms Saniya,7
+8,Sir Barkatullah,8
+9,Engr. Kanwal,9

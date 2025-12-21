@@ -1,8 +1,50 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Timetable Generator";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="text-center" style="padding-top: 50px;">
+    <h1 class="display-4 fw-bold text-dark">Timetable Generator</h1>
+    <p class="lead text-secondary">Automatic conflict-free scheduling using Backtracking Algorithm.</p>
+    
+    @if(ViewBag.Error != null)
+    {
+        <div class="alert alert-danger shadow-sm mx-auto" style="max-width: 800px;">
+            <strong>⚠️ Error:</strong> @ViewBag.Error
+        </div>
+    }
+
+    <div class="mt-5 mb-4">
+        <h3 class="text-primary">Step 1: Setup Data</h3>
+        <p class="text-muted">Please add data in the following sequence for best results:</p>
+        
+        <div class="btn-group flex-wrap justify-content-center" role="group">
+            <a href="/Setup/AddCourse" class="btn btn-outline-primary m-1 shadow-sm">Add Courses</a>
+            <a href="/Setup/AddRoom" class="btn btn-outline-primary m-1 shadow-sm">Add Rooms</a>
+            <a href="/Setup/AddTeacher" class="btn btn-outline-primary m-1 shadow-sm">Add Teachers</a>
+            <a href="/Setup/AddClass" class="btn btn-outline-primary m-1 shadow-sm">Add Classes</a>
+        </div>
+
+        <div class="mt-4" style="max-width: 600px; margin: 0 auto;">
+            <a href="/Setup/Manage" class="btn btn-dark btn-lg w-100 shadow">⚙️ Manage & Review Data</a>
+        </div>
+    </div>
+
+    <hr class="my-5" style="max-width: 800px; margin: 0 auto;" />
+
+    <div class="card mt-4 shadow" style="width: 26rem; margin: 0 auto; border: 2px solid #28a745; border-radius: 15px;">
+        <div class="card-body">
+            <h5 class="card-title text-success fw-bold">Step 2: Solve & Generate</h5>
+            <p class="card-text text-muted">Run the Backtracking Algorithm to create your timetable.</p>
+            
+            <a href="/Timetable/Generate" class="btn btn-success btn-lg w-100 fw-bold py-3 shadow-sm">
+                🚀 Generate Timetable
+            </a>
+        </div>
+    </div>
+    
+    <div class="mt-5 pt-4">
+        <a href="/Setup/ResetData" class="btn btn-outline-danger btn-sm opacity-75" onclick="return confirm('WARNING: This will delete ALL saved data. Are you sure?');">
+            🗑️ Reset / Clear All Data
+        </a>
+    </div>
 </div>

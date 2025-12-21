@@ -1,265 +1,126 @@
 @model dsa_project.Models.ManageViewModel
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Manage Data (Edit on Page)</h2>
-        <a href="/Timetable/Index" class="btn btn-secondary">Back to Home</a>
+    <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded shadow-sm mb-4">
+        <h2 class="mb-0 text-dark">⚙️ Manage Timetable Data</h2>
+        <div class="btn-group shadow-sm">
+            <a href="/Setup/AddCourse" class="btn btn-primary">Add Course</a>
+            <a href="/Setup/AddTeacher" class="btn btn-primary">Add Teacher</a>
+            <a href="/Setup/AddRoom" class="btn btn-primary">Add Room</a>
+            <a href="/Setup/AddClass" class="btn btn-success">+ Add Class</a>
+        </div>
     </div>
 
-    <div class="card mb-4 shadow-sm border-primary">
-        <div class="card-header bg-primary text-white"><h5>Courses</h5></div>
-        <table class="table table-striped mb-0">
-            <thead><tr><th>ID</th><th>Code</th><th>Title</th><th>Credits</th><th>Actions</th></tr></thead>
-            <tbody>
-                @foreach(var item in Model.Courses) {
+    <section class="mb-5">
+        <h3 class="text-primary border-bottom pb-2">📚 Courses</h3>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover shadow-sm">
+                <thead class="table-dark">
                     <tr>
-                        <td>@item.Id</td>
-                        <td>@item.Code</td>
-                        <td>@item.Title</td>
-                        <td>@item.CreditHours</td>
+                        <th>ID</th><th>Title</th><th>Cr. Hours</th><th>Category</th><th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model.Courses) {
+                        <tr>
+                            <td><strong>@c.Id</strong></td>
+                            <td>@c.Title</td>
+                            <td>@c.CreditHours</td>
+                            <td>
+                                <span class="badge @(c.IsLab ? "bg-warning text-dark" : "bg-info text-dark")">
+                                    @(c.IsLab ? "LAB (3h)" : "THEORY")
+                                </span>
+                            </td>
+                            <td>
+                                <a asp-action="DeleteCourse" asp-route-id="@c.Id" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this course?')">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="mb-5">
+        <h3 class="text-primary border-bottom pb-2">👨‍🏫 Teachers</h3>
+        <table class="table table-bordered table-hover shadow-sm">
+            <thead class="table-primary">
+                <tr>
+                    <th>ID</th><th>Name</th><th>Type</th><th>Assigned Course IDs</th><th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model.Teachers) {
+                    <tr>
+                        <td>@t.Id</td>
+                        <td>@t.Name</td>
+                        <td><small class="text-muted">@t.TeacherType</small></td>
                         <td>
-                            <button class="btn btn-sm btn-warning" 
-                                    onclick="openCourseModal('@item.Id', '@item.Code', '@item.Title', '@item.CreditHours')">
-                                ✏️ Edit
-                            </button>
-                            <a href="/Setup/DeleteCourse?id=@item.Id" class="btn btn-sm btn-danger" onclick="return confirm('Delete this Course?');">🗑️ Delete</a>
+                            @if(t.AssignedCourseIds != null) {
+                                @foreach(var id in t.AssignedCourseIds) {
+                                    <span class="badge bg-secondary">#@id</span>
+                                }
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="DeleteTeacher" asp-route-id="@t.Id" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete teacher?')">Delete</a>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
-    </div>
+    </section>
 
-    <div class="card mb-4 shadow-sm border-success">
-        <div class="card-header bg-success text-white"><h5>Teachers</h5></div>
-        <table class="table table-striped mb-0">
-            <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Actions</th></tr></thead>
+    <section class="mb-5">
+        <h3 class="text-primary border-bottom pb-2">🏫 Rooms</h3>
+        <table class="table table-bordered table-hover shadow-sm">
+            <thead class="table-success">
+                <tr>
+                    <th>ID</th><th>Room #</th><th>Capacity</th><th>Room Type</th><th>Actions</th>
+                </tr>
+            </thead>
             <tbody>
-                @foreach(var item in Model.Teachers) {
-                    // Lists ko string mein convert kar rahe hain taake JS mein pass kar sakein
-                    string courses = string.Join(",", item.AssignedCourseIds);
-                    string slots = string.Join(",", item.AvailableTimeSlots);
+                @foreach (var r in Model.Rooms) {
                     <tr>
-                        <td>@item.Id</td>
-                        <td>@item.Name</td>
-                        <td>@item.Type</td>
+                        <td>@r.Id</td>
+                        <td>@r.RoomNumber</td>
+                        <td>@r.Capacity seats</td>
                         <td>
-                            <button class="btn btn-sm btn-warning" 
-                                    onclick="openTeacherModal('@item.Id', '@item.Name', '@item.EmployeeId', '@item.Type', '@courses', '@slots')">
-                                ✏️ Edit
-                            </button>
-                            <a href="/Setup/DeleteTeacher?id=@item.Id" class="btn btn-sm btn-danger" onclick="return confirm('Delete this Teacher?');">🗑️ Delete</a>
+                            <span class="badge @(r.IsLabRoom ? "bg-danger" : "bg-success")">
+                                @(r.IsLabRoom ? "LABORATORY" : "CLASSROOM")
+                            </span>
+                        </td>
+                        <td>
+                            <a asp-action="DeleteRoom" asp-route-id="@r.Id" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete room?')">Delete</a>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
-    </div>
+    </section>
 
-    <div class="card mb-4 shadow-sm border-info">
-        <div class="card-header bg-info text-white"><h5>Rooms</h5></div>
-        <table class="table table-striped mb-0">
-            <thead><tr><th>ID</th><th>Room No</th><th>Capacity</th><th>Actions</th></tr></thead>
+    <section class="mb-5">
+        <h3 class="text-primary border-bottom pb-2">👥 Class Sections</h3>
+        <table class="table table-bordered table-hover shadow-sm">
+            <thead class="table-info">
+                <tr>
+                    <th>ID</th><th>Name</th><th>Sem</th><th>Sec</th><th>Total Std.</th><th>Actions</th>
+                </tr>
+            </thead>
             <tbody>
-                @foreach(var item in Model.Rooms) {
+                @foreach (var cl in Model.Classes) {
                     <tr>
-                        <td>@item.Id</td>
-                        <td>@item.RoomNumber</td>
-                        <td>@item.Capacity</td>
+                        <td>@cl.Id</td>
+                        <td>@cl.Name</td>
+                        <td>@cl.Semester</td>
+                        <td>@cl.Section</td>
+                        <td>@cl.TotalStudents</td>
                         <td>
-                            <button class="btn btn-sm btn-warning" 
-                                    onclick="openRoomModal('@item.Id', '@item.RoomNumber', '@item.Capacity')">
-                                ✏️ Edit
-                            </button>
-                            <a href="/Setup/DeleteRoom?id=@item.Id" class="btn btn-sm btn-danger" onclick="return confirm('Delete this Room?');">🗑️ Delete</a>
+                            <a asp-action="DeleteClass" asp-route-id="@cl.Id" class="btn btn-sm btn-danger" onclick="return confirm('Delete class?')">Delete</a>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
-    </div>
-
-    <div class="card mb-4 shadow-sm border-secondary">
-        <div class="card-header bg-secondary text-white"><h5>Time Slots</h5></div>
-        <table class="table table-striped mb-0">
-            <thead><tr><th>ID</th><th>Day</th><th>Time</th><th>Actions</th></tr></thead>
-            <tbody>
-                @foreach(var item in Model.TimeSlots) {
-                    <tr>
-                        <td>@item.Id</td>
-                        <td>@item.Day</td>
-                        <td>@item.StartTime - @item.EndTime</td>
-                        <td>
-                            <button class="btn btn-sm btn-warning" 
-                                    onclick="openSlotModal('@item.Id', '@item.Day', '@item.StartTime', '@item.EndTime')">
-                                ✏️ Edit
-                            </button>
-                            <a href="/Setup/DeleteTimeSlot?id=@item.Id" class="btn btn-sm btn-danger" onclick="return confirm('Delete this Slot?');">🗑️ Delete</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-
-    <div class="card mb-4 shadow-sm border-dark">
-        <div class="card-header bg-dark text-white"><h5>Classes</h5></div>
-        <table class="table table-striped mb-0">
-            <thead><tr><th>ID</th><th>Name</th><th>Students</th><th>Actions</th></tr></thead>
-            <tbody>
-                @foreach(var item in Model.Classes) {
-                    string courses = string.Join(",", item.CourseIds);
-                    <tr>
-                        <td>@item.Id</td>
-                        <td>@item.Name</td>
-                        <td>@item.TotalStudents</td>
-                        <td>
-                            <button class="btn btn-sm btn-warning" 
-                                    onclick="openClassModal('@item.Id', '@item.Name', '@item.TotalStudents', '@courses')">
-                                ✏️ Edit
-                            </button>
-                            <a href="/Setup/DeleteClass?id=@item.Id" class="btn btn-sm btn-danger" onclick="return confirm('Delete this Class?');">🗑️ Delete</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+    </section>
 </div>
-
-<div class="modal fade" id="courseModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <form asp-action="EditCourse" method="post">
-          <div class="modal-header bg-primary text-white"><h5 class="modal-title">Edit Course</h5><button type="button" class="close" data-dismiss="modal"><span>&times;</span></button></div>
-          <div class="modal-body">
-              <input type="hidden" name="Id" id="c_id" />
-              <label>Code:</label> <input name="Code" id="c_code" class="form-control" required />
-              <label>Title:</label> <input name="Title" id="c_title" class="form-control" required />
-              <label>Credits:</label> <input name="CreditHours" id="c_credits" type="number" class="form-control" required />
-          </div>
-          <div class="modal-footer"><button type="submit" class="btn btn-primary">Save Changes</button></div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="teacherModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <form asp-action="EditTeacher" method="post">
-          <div class="modal-header bg-success text-white"><h5 class="modal-title">Edit Teacher</h5><button type="button" class="close" data-dismiss="modal"><span>&times;</span></button></div>
-          <div class="modal-body">
-              <input type="hidden" name="Id" id="t_id" />
-              <label>Name:</label> <input name="Name" id="t_name" class="form-control" required />
-              <label>Emp ID:</label> <input name="EmployeeId" id="t_emp" class="form-control" required />
-              <label>Type:</label> <input name="Type" id="t_type" class="form-control" required />
-              <label>Assigned Course IDs (e.g. 1,2):</label> <input name="AssignedCoursesStr" id="t_courses" class="form-control" />
-              <label>Available Slot IDs (e.g. 1,2,3):</label> <input name="AvailableSlotsStr" id="t_slots" class="form-control" />
-          </div>
-          <div class="modal-footer"><button type="submit" class="btn btn-success">Save Changes</button></div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="roomModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <form asp-action="EditRoom" method="post">
-          <div class="modal-header bg-info text-white"><h5 class="modal-title">Edit Room</h5><button type="button" class="close" data-dismiss="modal"><span>&times;</span></button></div>
-          <div class="modal-body">
-              <input type="hidden" name="Id" id="r_id" />
-              <label>Number:</label> <input name="RoomNumber" id="r_num" class="form-control" required />
-              <label>Capacity:</label> <input name="Capacity" id="r_cap" type="number" class="form-control" required />
-          </div>
-          <div class="modal-footer"><button type="submit" class="btn btn-info">Save Changes</button></div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="slotModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <form asp-action="EditTimeSlot" method="post">
-          <div class="modal-header bg-secondary text-white"><h5 class="modal-title">Edit Slot</h5><button type="button" class="close" data-dismiss="modal"><span>&times;</span></button></div>
-          <div class="modal-body">
-              <input type="hidden" name="Id" id="s_id" />
-              <label>Day:</label> <input name="Day" id="s_day" class="form-control" required />
-              <label>Start:</label> <input name="StartTime" id="s_start" type="time" class="form-control" required />
-              <label>End:</label> <input name="EndTime" id="s_end" type="time" class="form-control" required />
-          </div>
-          <div class="modal-footer"><button type="submit" class="btn btn-secondary">Save Changes</button></div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="classModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <form asp-action="EditClass" method="post">
-          <div class="modal-header bg-dark text-white"><h5 class="modal-title">Edit Class</h5><button type="button" class="close" data-dismiss="modal"><span>&times;</span></button></div>
-          <div class="modal-body">
-              <input type="hidden" name="Id" id="cl_id" />
-              <label>Name:</label> <input name="Name" id="cl_name" class="form-control" required />
-              <label>Students:</label> <input name="TotalStudents" id="cl_std" type="number" class="form-control" required />
-              <label>Course IDs (e.g. 1,2):</label> <input name="CourseIdsStr" id="cl_courses" class="form-control" />
-          </div>
-          <div class="modal-footer"><button type="submit" class="btn btn-dark">Save Changes</button></div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<script>
-    // Course Modal
-    function openCourseModal(id, code, title, credits) {
-        $('#c_id').val(id);
-        $('#c_code').val(code);
-        $('#c_title').val(title);
-        $('#c_credits').val(credits);
-        $('#courseModal').modal('show');
-    }
-
-    // Teacher Modal
-    function openTeacherModal(id, name, emp, type, courses, slots) {
-        $('#t_id').val(id);
-        $('#t_name').val(name);
-        $('#t_emp').val(emp);
-        $('#t_type').val(type);
-        $('#t_courses').val(courses);
-        $('#t_slots').val(slots);
-        $('#teacherModal').modal('show');
-    }
-
-    // Room Modal
-    function openRoomModal(id, num, cap) {
-        $('#r_id').val(id);
-        $('#r_num').val(num);
-        $('#r_cap').val(cap);
-        $('#roomModal').modal('show');
-    }
-
-    // Slot Modal
-    function openSlotModal(id, day, start, end) {
-        $('#s_id').val(id);
-        $('#s_day').val(day);
-        $('#s_start').val(start);
-        $('#s_end').val(end);
-        $('#slotModal').modal('show');
-    }
-
-    // Class Modal
-    function openClassModal(id, name, std, courses) {
-        $('#cl_id').val(id);
-        $('#cl_name').val(name);
-        $('#cl_std').val(std);
-        $('#cl_courses').val(courses);
-        $('#classModal').modal('show');
-    }
-</script>

@@ -1,3 +1,16 @@
-Id,RoomNumber,Capacity
-1,E100,60
-2,E101,20
+Id,RoomNumber,Capacity,IsLabRoom
+1,R-101,50,False
+2,R-102,50,False
+3,R-103,50,False
+4,R-104,50,False
+5,R-105,50,False
+6,R-106,50,False
+7,R-107,50,False
+8,R-108,50,False
+9,R-109,50,False
+10,R-110,50,False
+11,Lab 01,50,True
+12,Lab 02,50,True
+13,Lab 07,50,True
+14,Lab 08,50,True
+15,Lab 09,50,True
