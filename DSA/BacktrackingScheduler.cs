@@ -86,8 +86,10 @@ namespace dsa_project.DSA
                 {
                     if (currentTask.IsLab)
                     {
-                        bool isLongSlot = slot.DurationInHours >= 2.8;
-                        bool isUniLabTime = (slot.StartTime.Hours == 8 || slot.StartTime.Hours == 11 || slot.StartTime.Hours == 14);
+                       bool isLongSlot = slot.DurationInHours >= 2.8;
+                       bool isUniLabTime = (slot.StartTime.Hours == 8 && (slot.StartTime.Minutes == 30 || slot.StartTime.Minutes == 00)) || 
+                        (slot.StartTime.Hours == 11 && (slot.StartTime.Minutes == 30 || slot.StartTime.Minutes == 00) ) || 
+                        (slot.StartTime.Hours == 14 && (slot.StartTime.Minutes == 30 || slot.StartTime.Minutes == 00));
 
                         if (!isLongSlot || !isUniLabTime) continue; 
                     }

@@ -28,7 +28,8 @@
             @{ sectionIdx++; }
             
             <div class="class-header">
-                <h4 class="mb-0">Class: @classGroup.Key.ClassName - Section: @classGroup.Key.Section</h4>
+                @* FIX: 'Section' property ko hata diya gaya hai taake crash na ho *@
+                <h4 class="mb-0">Class: @classGroup.Key.ClassName</h4>
             </div>
             
             <table class="table table-bordered table-hover text-center table-custom bg-white">
@@ -41,9 +42,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var item in classGroup.OrderBy(x => GetDayOrder(x.TimeSlotInfo)))
+                    @foreach (var item in classGroup.OrderBy(x => GetDayOrder(x.TimeSlotInfo)).ThenBy(x => x.TimeSlotId))
                     {
-                        <tr>
+                        <tr class="@(item.CourseName.ToLower().Contains("lab") ? "table-light" : "")">
                             <td class="fw-bold">@item.TimeSlotInfo</td>
                             <td>@item.CourseName</td>
                             <td>@item.TeacherName</td>

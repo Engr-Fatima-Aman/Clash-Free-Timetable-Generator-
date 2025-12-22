@@ -29,8 +29,9 @@ namespace dsa_project.Controllers
 
             if (assignments == null) assignments = new List<TimetableAssignment>();
 
+            // FIX: Grouping by ClassName only (Clean View)
             var groupedResult = assignments
-                .GroupBy(a => new { a.ClassName, a.Section })
+                .GroupBy(a => new { a.ClassName })
                 .Cast<IGrouping<dynamic, TimetableAssignment>>()
                 .ToList();
 
@@ -48,6 +49,7 @@ namespace dsa_project.Controllers
 
             _persistenceService.LoadAllData(courses, teachers, rooms, timeSlots, classes, out _);
 
+            // Check if slots exist, otherwise create them
             if (timeSlots.GetAllTimeSlots().Count == 0)
             {
                 int slotId = 1;
@@ -55,18 +57,24 @@ namespace dsa_project.Controllers
                 
                 foreach (var day in days)
                 {
-                    // Theory: 2 Hours (Calculated automatically by model)
+                    // --- THEORY SLOTS ---
                     timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(8, 30, 0), EndTime = new TimeSpan(10, 30, 0) });
                     timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(10, 30, 0), EndTime = new TimeSpan(12, 30, 0) });
-                    timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(13, 30, 0), EndTime = new TimeSpan(15, 30, 0) });
-
-                    // Theory: 1 Hour
-                    timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(15, 30, 0), EndTime = new TimeSpan(16, 30, 0) });
                     timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(12, 30, 0), EndTime = new TimeSpan(13, 30, 0) });
+                    timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(13, 30, 0), EndTime = new TimeSpan(15, 30, 0) });
+                    timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(15, 30, 0), EndTime = new TimeSpan(16, 30, 0) });
 
-                    // Lab: 3 Hours
-                    timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(9, 0, 0), EndTime = new TimeSpan(12, 0, 0) });
-                    timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(14, 0, 0), EndTime = new TimeSpan(17, 0, 0) });
+                    // --- LAB SLOTS (FIXED) ---
+                    // These exact hours match the 'BacktrackingScheduler' logic (8, 11, 14)
+                    
+                    // 1. Morning Lab (8:30 - 11:30)
+                    timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(8, 30, 0), EndTime = new TimeSpan(11, 30, 0) });
+                    
+                    // 2. Mid-Day Lab (11:30 - 2:30)
+                    timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(11, 30, 0), EndTime = new TimeSpan(14, 30, 0) });
+
+                    // 3. Afternoon Lab (2:30 - 5:30)
+                    timeSlots.AddTimeSlot(new TimeSlot { Id = slotId++, Day = day, StartTime = new TimeSpan(14, 30, 0), EndTime = new TimeSpan(17, 30, 0) });
                 }
             }
 
@@ -78,7 +86,7 @@ namespace dsa_project.Controllers
                 _persistenceService.SaveAllData(courses, teachers, rooms, timeSlots, classes, result);
                 
                 var groupedResult = result
-                    .GroupBy(a => new { a.ClassName, a.Section })
+                    .GroupBy(a => new { a.ClassName })
                     .Cast<IGrouping<dynamic, TimetableAssignment>>()
                     .ToList();
 
