@@ -23,7 +23,7 @@ namespace dsa_project.DSA
         private TimeSlotHashTable timeSlotTable;
         
         private int assignmentAttempts = 0;
-        private const int MAX_ATTEMPTS = 2000000;
+        private const int MAX_ATTEMPTS = 2000000; 
 
         public BacktrackingScheduler(CourseHashTable courses, TeacherHashTable teachers,
                 RoomHashTable rooms, TimeSlotHashTable timeSlots, ClassHashTable classes)
@@ -40,8 +40,8 @@ namespace dsa_project.DSA
         {
             solution.Clear();
             assignmentAttempts = 0;
+            Console.WriteLine("--- Starting Robust Scheduler ---");
 
-            // Tasks ko priority dena: Pehle Labs phir lambay slots (3h, 2h, 1h)
             var tasks = CreateSchedulingTasks(classesToSchedule)
                         .OrderByDescending(t => t.IsLab) 
                         .ThenByDescending(t => t.RequiredHours) 
@@ -49,10 +49,12 @@ namespace dsa_project.DSA
 
             if (Backtrack(0, tasks))
             {
+                Console.WriteLine($"+++ SUCCESS: Timetable Generated in {assignmentAttempts} attempts!");
                 return solution;
             }
             
-            return null;
+            Console.WriteLine("--- FAILURE: Optimization failed. Check Teacher/Room availability. ---");
+            return new List<TimetableAssignment>(); 
         }
 
         private bool Backtrack(int taskIndex, List<SchedulingTask> tasks)
@@ -61,29 +63,40 @@ namespace dsa_project.DSA
             if (taskIndex == tasks.Count) return true;
 
             var currentTask = tasks[taskIndex];
+
+            if (assignmentAttempts % 1000 == 0)
+            {
+                Console.WriteLine($"Attempts: {assignmentAttempts} | Task: {taskIndex}/{tasks.Count} | CourseID: {currentTask.CourseId}");
+            }
+
             var teachers = GetTeachersForCourse(currentTask.CourseId);
-            
-            // Rooms filter: Lab course hai toh Lab room, warna normal room
+            if (!teachers.Any()) return false;
+
             var rooms = roomTable.GetAllRooms()
-                         .Where(r => r.IsLabRoom == currentTask.IsLab)
-                         .OrderBy(r => Guid.NewGuid()).ToList();
+                                 .Where(r => r.IsLabRoom == currentTask.IsLab)
+                                 .OrderBy(r => Guid.NewGuid()).ToList();
             
-            // Slots filter: Duration aur EndTime check
-            var allSlots = timeSlotTable.GetAllTimeSlots()
-                            .Where(s => Math.Abs(s.DurationInHours - currentTask.RequiredHours) < 0.1)
-                            .Where(s => {
-                                if (currentTask.IsLab) 
-                                    return s.EndTime <= new TimeSpan(17, 30, 0);
-                                else 
-                                    return s.EndTime <= new TimeSpan(16, 30, 0);
-                            })
-                            .OrderBy(s => Guid.NewGuid()).ToList();
+            if (!rooms.Any()) rooms = roomTable.GetAllRooms().ToList(); 
+
+            var allCandidateSlots = timeSlotTable.GetAllTimeSlots().ToList();
 
             foreach (var teacher in teachers)
             {
-                foreach (var slot in allSlots)
+                foreach (var slot in allCandidateSlots)
                 {
-                    // Aik hi din mein aik hi course do baar nahi hona chahiye (Except Labs)
+                    if (currentTask.IsLab)
+                    {
+                        bool isLongSlot = slot.DurationInHours >= 2.8;
+                        bool isUniLabTime = (slot.StartTime.Hours == 8 || slot.StartTime.Hours == 11 || slot.StartTime.Hours == 14);
+
+                        if (!isLongSlot || !isUniLabTime) continue; 
+                    }
+                    else 
+                    {
+                        bool isCorrectDuration = Math.Abs(slot.DurationInHours - currentTask.RequiredHours) < 0.2;
+                        if (!isCorrectDuration || slot.DurationInHours >= 2.8) continue;
+                    }
+
                     if (!currentTask.IsLab && IsCourseAlreadyScheduledOnDay(currentTask.CourseId, currentTask.ClassId, slot.Day))
                         continue;
 
@@ -93,15 +106,21 @@ namespace dsa_project.DSA
                         
                         if (IsSafe(currentTask, teacher.Id, room.Id, slot))
                         {
+                            var currentClass = classTable.GetClassById(currentTask.ClassId);
+                            var currentCourse = courseTable.GetCourseById(currentTask.CourseId);
+
                             var assignment = new TimetableAssignment {
                                 ClassId = currentTask.ClassId,
                                 CourseId = currentTask.CourseId,
                                 TeacherId = teacher.Id,
                                 RoomId = room.Id,
                                 TimeSlotId = slot.Id,
-                                ClassName = classTable.GetClassById(currentTask.ClassId).Name,
-                                Section = classTable.GetClassById(currentTask.ClassId).Section,
-                                CourseName = courseTable.GetCourseById(currentTask.CourseId).Title,
+                                
+                                // FIX: Using 'Semester' and 'Section' exactly as defined in your Class model
+                                ClassName = $"{currentClass.Semester}-{currentClass.Section}", 
+                                Section = currentClass.Section,
+                                
+                                CourseName = currentCourse.Title,
                                 TeacherName = teacher.Name,
                                 RoomName = room.RoomNumber,
                                 TimeSlotInfo = $"{slot.Day} ({slot.StartTime:hh\\:mm} - {slot.EndTime:hh\\:mm})"
@@ -109,7 +128,7 @@ namespace dsa_project.DSA
 
                             solution.Add(assignment);
                             if (Backtrack(taskIndex + 1, tasks)) return true;
-                            solution.Remove(assignment); // Backtrack step
+                            solution.Remove(assignment); 
                         }
                     }
                 }
@@ -119,16 +138,13 @@ namespace dsa_project.DSA
 
         private bool IsSafe(SchedulingTask task, int teacherId, int roomId, TimeSlot newSlot)
         {
-            // O(N) check for collisions
             foreach (var existing in solution)
             {
                 var existingSlot = timeSlotTable.GetTimeSlotById(existing.TimeSlotId);
-
                 if (existingSlot.Day == newSlot.Day)
                 {
-                    // Standard collision check logic
                     bool timeOverlaps = newSlot.StartTime < existingSlot.EndTime && 
-                                       newSlot.EndTime > existingSlot.StartTime;
+                                        newSlot.EndTime > existingSlot.StartTime;
 
                     if (timeOverlaps)
                     {
@@ -151,11 +167,12 @@ namespace dsa_project.DSA
                     var course = courseTable.GetCourseById(courseId);
                     if (course == null) continue;
 
-                    if (course.IsLab)
+                    if (course.IsLab || course.Title.ToLower().Contains("lab"))
+                    {
                         tasks.Add(new SchedulingTask { ClassId = cls.Id, CourseId = courseId, RequiredHours = 3, IsLab = true });
+                    }
                     else if (course.CreditHours == 3)
                     {
-                        // 3 credit hours = 2h slot + 1h slot
                         tasks.Add(new SchedulingTask { ClassId = cls.Id, CourseId = courseId, RequiredHours = 2, IsLab = false });
                         tasks.Add(new SchedulingTask { ClassId = cls.Id, CourseId = courseId, RequiredHours = 1, IsLab = false });
                     }

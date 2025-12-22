@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO; // Added for File operations
+using System.IO; 
 using dsa_project.Models;
 using dsa_project.DSA;
 using dsa_project.Services;
@@ -34,8 +34,7 @@ namespace dsa_project.Controllers
         }
 
         // --- 1. COURSES ---
-        [HttpGet]
-        public IActionResult AddCourse() => View();
+        [HttpGet] public IActionResult AddCourse() => View();
         
         [HttpPost]
         public IActionResult AddCourse(Course course)
@@ -43,7 +42,6 @@ namespace dsa_project.Controllers
             LoadAllData(out var c, out var t, out var r, out var ts, out var cl);
             var all = c.GetAllCourses();
             course.Id = all.Any() ? all.Max(x => x.Id) + 1 : 1;
-            
             c.AddCourse(course);
             SaveAllData(c, t, r, ts, cl);
             ViewBag.Message = $"Course '{course.Title}' Added Successfully!";
@@ -51,8 +49,7 @@ namespace dsa_project.Controllers
         }
 
         // --- 2. ROOMS ---
-        [HttpGet]
-        public IActionResult AddRoom() => View();
+        [HttpGet] public IActionResult AddRoom() => View();
         
         [HttpPost]
         public IActionResult AddRoom(Room room)
@@ -60,7 +57,6 @@ namespace dsa_project.Controllers
             LoadAllData(out var c, out var t, out var r, out var ts, out var cl);
             var all = r.GetAllRooms();
             room.Id = all.Any() ? all.Max(x => x.Id) + 1 : 1;
-
             r.AddRoom(room);
             SaveAllData(c, t, r, ts, cl);
             ViewBag.Message = $"Room '{room.RoomNumber}' Added Successfully!";
@@ -68,9 +64,13 @@ namespace dsa_project.Controllers
         }
 
         // --- 3. TEACHERS ---
-        // FIXED: Added GET method so the button can open the page
-        [HttpGet]
-        public IActionResult AddTeacher() => View();
+        [HttpGet] 
+        public IActionResult AddTeacher() 
+        {
+            LoadAllData(out var c, out var t, out var r, out var ts, out var cl);
+            ViewBag.Courses = c.GetAllCourses(); // Teacher ko course assign karne ke liye list
+            return View();
+        }
 
         [HttpPost]
         public IActionResult AddTeacher(Teacher teacher, string AssignedCoursesStr)
@@ -80,12 +80,22 @@ namespace dsa_project.Controllers
             teacher.Id = all.Any() ? all.Max(x => x.Id) + 1 : 1;
             
             if (!string.IsNullOrEmpty(AssignedCoursesStr))
-                teacher.AssignedCourseIds = AssignedCoursesStr.Split(',').Select(s => int.Parse(s.Trim())).ToList();
-            
+            {
+                try {
+                    teacher.AssignedCourseIds = AssignedCoursesStr
+                        .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => int.Parse(s.Trim()))
+                        .ToList();
+                } catch {
+                    ModelState.AddModelError("", "Please enter Course IDs in correct format (e.g., 1, 2, 5)");
+                    ViewBag.Courses = c.GetAllCourses();
+                    return View(teacher);
+                }
+            }
+
             t.AddTeacher(teacher);
             SaveAllData(c, t, r, ts, cl);
-            ViewBag.Message = $"Teacher '{teacher.Name}' Added Successfully!";
-            return View();
+            return RedirectToAction("Manage");
         }
 
         // --- 4. CLASSES ---
@@ -103,10 +113,8 @@ namespace dsa_project.Controllers
             LoadAllData(out var c, out var t, out var r, out var ts, out var cl);
             var all = cl.GetAllClasses();
             cls.Id = all.Any() ? all.Max(x => x.Id) + 1 : 1;
-
             if (!string.IsNullOrEmpty(courseIdsInput))
                 cls.CourseIds = courseIdsInput.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => int.Parse(s.Trim())).ToList();
-
             cl.AddClass(cls);
             SaveAllData(c, t, r, ts, cl);
             return RedirectToAction("Manage");
@@ -126,7 +134,6 @@ namespace dsa_project.Controllers
             return View(model);
         }
 
-        // FIXED: Added ResetData logic
         [HttpGet]
         public IActionResult ResetData()
         {
@@ -137,6 +144,7 @@ namespace dsa_project.Controllers
                         System.IO.File.Delete(file);
                     }
                 }
+                TempData["Message"] = "All data has been reset.";
                 return RedirectToAction("Index", "Home");
             }
             catch (Exception ex) {
@@ -150,7 +158,7 @@ namespace dsa_project.Controllers
         public IActionResult DeleteTeacher(int id) { LoadAllData(out var c, out var t, out var r, out var ts, out var cl); t.RemoveTeacher(id); SaveAllData(c, t, r, ts, cl); return RedirectToAction("Manage"); }
         public IActionResult DeleteClass(int id) { LoadAllData(out var c, out var t, out var r, out var ts, out var cl); cl.RemoveClass(id); SaveAllData(c, t, r, ts, cl); return RedirectToAction("Manage"); }
 
-        // --- 6. SLOT GENERATION ---
+        // --- 6. FIXED SLOT GENERATION ---
         public IActionResult GenerateDefaultSlots()
         {
             LoadAllData(out var c, out var t, out var r, out var ts, out var cl);
@@ -160,21 +168,32 @@ namespace dsa_project.Controllers
 
             foreach (var day in days)
             {
-                for (int hour = 8; hour <= 15; hour++)
+                // 1. FIXED LAB SESSIONS (Standard Uni Timing)
+                TimeSpan[] labStarts = { new TimeSpan(8, 30, 0), new TimeSpan(11, 30, 0), new TimeSpan(14, 30, 0) };
+                foreach (var start in labStarts)
                 {
-                    TimeSpan start = new TimeSpan(hour, 30, 0);
-                    // 1h Slot
-                    ts.AddTimeSlot(new TimeSlot { Id = id++, Day = day, StartTime = start, EndTime = start.Add(TimeSpan.FromHours(1)) });
-                    // 2h Slot
-                    if (hour + 2 <= 17)
-                        ts.AddTimeSlot(new TimeSlot { Id = id++, Day = day, StartTime = start, EndTime = start.Add(TimeSpan.FromHours(2)) });
-                    // 3h Slot (Lab)
-                    if (hour + 3 <= 17)
-                        ts.AddTimeSlot(new TimeSlot { Id = id++, Day = day, StartTime = start, EndTime = start.Add(TimeSpan.FromHours(3)) });
+                    ts.AddTimeSlot(new TimeSlot { 
+                        Id = id++, Day = day, StartTime = start, EndTime = start.Add(TimeSpan.FromHours(3)) 
+                    });
+                }
+
+                // 2. THEORY SLOTS (Available every hour from 8:30)
+                for (int hour = 8; hour <= 16; hour++)
+                {
+                    TimeSpan theoryStart = new TimeSpan(hour, 30, 0);
+                    
+                    // 1-Hour Slot
+                    ts.AddTimeSlot(new TimeSlot { Id = id++, Day = day, StartTime = theoryStart, EndTime = theoryStart.Add(TimeSpan.FromHours(1)) });
+
+                    // 2-Hour Slot (stays within uni timing)
+                    if (theoryStart.Add(TimeSpan.FromHours(2)) <= new TimeSpan(17, 30, 0))
+                    {
+                        ts.AddTimeSlot(new TimeSlot { Id = id++, Day = day, StartTime = theoryStart, EndTime = theoryStart.Add(TimeSpan.FromHours(2)) });
+                    }
                 }
             }
             SaveAllData(c, t, r, ts, cl);
-            TempData["Message"] = "Time slots generated successfully!";
+            TempData["Message"] = "Standard Slots (Labs @ 8:30, 11:30, 14:30) generated!";
             return RedirectToAction("Index", "Home");
         }
     }

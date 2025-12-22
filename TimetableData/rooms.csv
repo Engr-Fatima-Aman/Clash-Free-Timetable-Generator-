@@ -14,3 +14,4 @@ Id,RoomNumber,Capacity,IsLabRoom
 13,Lab 07,50,True
 14,Lab 08,50,True
 15,Lab 09,50,True
+16,R-111,50,False

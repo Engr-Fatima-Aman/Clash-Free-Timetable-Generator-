@@ -25,38 +25,35 @@
     @foreach (var classGroup in Model)
     {
         <div class="@(sectionIdx > 0 ? "page-break" : "")">
-            @{ sectionIdx++; }
-            
-            <div class="class-header">
-                <h4 class="mb-0">Class: @classGroup.Key.ClassName - Section: @classGroup.Key.Section</h4>
-            </div>
-            
-            <table class="table table-bordered table-hover text-center table-custom bg-white">
-                <thead class="table-dark">
-                    <tr>
-                        <th style="width: 25%;">Day & Time</th>
-                        <th style="width: 35%;">Course Details</th>
-                        <th style="width: 25%;">Instructor</th>
-                        <th style="width: 15%;">Location</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in classGroup.OrderBy(x => GetDayOrder(x.TimeSlotInfo)))
-                    {
-                        <tr>
-                            <td class="fw-bold">@item.TimeSlotInfo</td>
-                            <td>@item.CourseName</td>
-                            <td>@item.TeacherName</td>
-                            <td>
-                                <span class="badge @(item.RoomName.ToLower().Contains("lab") ? "badge-lab" : "badge-room") p-2">
-                                    @item.RoomName
-                                </span>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+        @{ sectionIdx++; }
+        
+        <div class="class-header">
+            @* Update: Ab sirf ClassName dikhayega kyunke usme Semester-Section (1-A) dono hain *@
+            <h4 class="mb-0">Class: @classGroup.Key.ClassName</h4>
         </div>
+        
+        <table class="table table-bordered table-hover text-center table-custom bg-white">
+            @* ... (thead same rahega) ... *@
+            <tbody>
+                @* Update: Sorting logic mein thora behtar order taake time wise bhi sort ho *@
+                @foreach (var item in classGroup.OrderBy(x => GetDayOrder(x.TimeSlotInfo)).ThenBy(x => x.TimeSlotId))
+                {
+                    @* Highlight Lab Rows: Poori row ka background halka sa change karne ke liye *@
+                    <tr class="@(item.CourseName.ToLower().Contains("lab") ? "table-light" : "")">
+                        <td class="fw-bold">@item.TimeSlotInfo</td>
+                        <td>@item.CourseName</td>
+                        <td>@item.TeacherName</td>
+                        <td>
+                            <span class="badge @(item.RoomName.ToLower().Contains("lab") ? "badge-lab" : "badge-room") p-2">
+                                @item.RoomName
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
     }
 </div>
 
