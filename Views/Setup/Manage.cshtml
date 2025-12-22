@@ -1,126 +1,522 @@
 @model dsa_project.Models.ManageViewModel
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded shadow-sm mb-4">
-        <h2 class="mb-0 text-dark">⚙️ Manage Timetable Data</h2>
-        <div class="btn-group shadow-sm">
-            <a href="/Setup/AddCourse" class="btn btn-primary">Add Course</a>
-            <a href="/Setup/AddTeacher" class="btn btn-primary">Add Teacher</a>
-            <a href="/Setup/AddRoom" class="btn btn-primary">Add Room</a>
-            <a href="/Setup/AddClass" class="btn btn-success">+ Add Class</a>
+@{
+    ViewData["Title"] = "Data Management";
+}
+
+<link rel="stylesheet" href="~/css/main.css">
+<link rel="stylesheet" href="~/css/components.css">
+<link rel="stylesheet" href="~/css/manage.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="manage-dashboard">
+    <div class="container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="d-flex justify-content-between align-items-start flex-wrap">
+                <div>
+                    <h1 class="dashboard-title">
+                        <i class="fas fa-cogs"></i>
+                        Data Management Dashboard
+                    </h1>
+                    <p class="dashboard-subtitle">
+                        Manage and organize all timetable data in one centralized location
+                    </p>
+                </div>
+                <div class="badge" style="background: rgba(255,255,255,0.2); color: white; font-size: 0.9rem; padding: 0.5rem 1rem;">
+                    <i class="fas fa-database me-2"></i>
+                    @(Model.Courses.Count + Model.Teachers.Count + Model.Rooms.Count + Model.Classes.Count) Total Entries
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="action-grid">
+            <a asp-controller="Setup" asp-action="AddCourse" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="action-content">
+                    <h4>Add New Course</h4>
+                    <p>Create course with credits and type</p>
+                </div>
+            </a>
+            
+            <a asp-controller="Setup" asp-action="AddTeacher" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <div class="action-content">
+                    <h4>Add Teacher</h4>
+                    <p>Register faculty with assignments</p>
+                </div>
+            </a>
+            
+            <a asp-controller="Setup" asp-action="AddRoom" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-door-open"></i>
+                </div>
+                <div class="action-content">
+                    <h4>Add Room</h4>
+                    <p>Configure classrooms and labs</p>
+                </div>
+            </a>
+            
+            <a asp-controller="Setup" asp-action="AddClass" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="action-content">
+                    <h4>Add Class Section</h4>
+                    <p>Create new student groups</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Statistics Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon" style="--stat-color: #3498db; --stat-color-dark: #2980b9;">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="stat-content">
+                    <h4>Courses</h4>
+                    <p>@Model.Courses.Count</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="--stat-color: #2ecc71; --stat-color-dark: #27ae60;">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <div class="stat-content">
+                    <h4>Teachers</h4>
+                    <p>@Model.Teachers.Count</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="--stat-color: #9b59b6; --stat-color-dark: #8e44ad;">
+                    <i class="fas fa-door-open"></i>
+                </div>
+                <div class="stat-content">
+                    <h4>Rooms</h4>
+                    <p>@Model.Rooms.Count</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="--stat-color: #e74c3c; --stat-color-dark: #c0392b;">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h4>Classes</h4>
+                    <p>@Model.Classes.Count</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Courses Section -->
+        <div class="data-section">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fas fa-book text-primary"></i>
+                    Course Catalog
+                </h3>
+                <span class="section-count">
+                    @Model.Courses.Count courses • 
+                    @Model.Courses.Count(c => c.IsLab) labs • 
+                    @Model.Courses.Count(c => !c.IsLab) theory
+                </span>
+            </div>
+
+            @if (!Model.Courses.Any())
+            {
+                <div class="empty-state">
+                    <i class="fas fa-book-open"></i>
+                    <h4>No Courses Found</h4>
+                    <p>Start by adding your first course</p>
+                    <a asp-controller="Setup" asp-action="AddCourse" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i> Add Course
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="enhanced-table">
+                        <thead>
+                            <tr>
+                                <th>Course ID</th>
+                                <th>Title</th>
+                                <th>Credit Hours</th>
+                                <th>Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var c in Model.Courses)
+                            {
+                                <tr>
+                                    <td class="id-cell">#@c.Id</td>
+                                    <td>
+                                        <div class="fw-semibold">@c.Title</div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="fw-bold">@c.CreditHours</span>
+                                            <span class="text-muted small">hours</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="enhanced-badge @(c.IsLab ? "badge-course-lab" : "badge-course-theory")">
+                                            <i class="fas @(c.IsLab ? "fa-flask" : "fa-book")"></i>
+                                            @(c.IsLab ? "Lab Session" : "Theory")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-group">
+                                            <a asp-action="EditCourse" asp-route-id="@c.Id" class="btn-action btn-edit">
+                                                <i class="fas fa-edit"></i>
+                                                Edit
+                                            </a>
+                                            <a asp-action="DeleteCourse" asp-route-id="@c.Id" 
+                                               class="btn-action btn-delete"
+                                               onclick="return confirm('Are you sure you want to delete this course?\\n\\nCourse: @c.Title\\nID: @c.Id')">
+                                                <i class="fas fa-trash"></i>
+                                                Delete
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+        <!-- Teachers Section -->
+        <div class="data-section">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fas fa-chalkboard-teacher text-success"></i>
+                    Faculty Directory
+                </h3>
+                <span class="section-count">
+                    @Model.Teachers.Count faculty members
+                </span>
+            </div>
+
+            @if (!Model.Teachers.Any())
+            {
+                <div class="empty-state">
+                    <i class="fas fa-user-tie"></i>
+                    <h4>No Teachers Found</h4>
+                    <p>Add teachers to assign to courses</p>
+                    <a asp-controller="Setup" asp-action="AddTeacher" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i> Add Teacher
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="enhanced-table">
+                        <thead>
+                            <tr>
+                                <th>Teacher ID</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Assigned Courses</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in Model.Teachers)
+                            {
+                                <tr>
+                                    <td class="id-cell">#@t.Id</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div style="width: 40px; height: 40px; background: #f1f5f9; border-radius: 50%; 
+                                                        display: flex; align-items: center; justify-content: center; color: #64748b;">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">@t.Name</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="enhanced-badge badge-teacher-type">
+                                            @t.TeacherType
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (t.AssignedCourseIds != null && t.AssignedCourseIds.Any())
+                                        {
+                                            <div class="course-id-list">
+                                                @foreach(var id in t.AssignedCourseIds)
+                                                {
+                                                    <span class="course-id-badge">
+                                                        <i class="fas fa-hashtag"></i>@id
+                                                    </span>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">
+                                                <i class="fas fa-info-circle me-1"></i> No assignments
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="action-group">
+                                            <a asp-action="EditTeacher" asp-route-id="@t.Id" class="btn-action btn-edit">
+                                                <i class="fas fa-edit"></i>
+                                                Edit
+                                            </a>
+                                            <a asp-action="DeleteTeacher" asp-route-id="@t.Id" 
+                                               class="btn-action btn-delete"
+                                               onclick="return confirm('Are you sure you want to delete this teacher?\\n\\nTeacher: @t.Name\\nID: @t.Id')">
+                                                <i class="fas fa-trash"></i>
+                                                Delete
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+        <!-- Rooms Section -->
+        <div class="data-section">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fas fa-door-open text-purple"></i>
+                    Room Inventory
+                </h3>
+                <span class="section-count">
+                    @Model.Rooms.Count(r => !r.IsLabRoom) classrooms • 
+                    @Model.Rooms.Count(r => r.IsLabRoom) labs
+                </span>
+            </div>
+
+            @if (!Model.Rooms.Any())
+            {
+                <div class="empty-state">
+                    <i class="fas fa-building"></i>
+                    <h4>No Rooms Found</h4>
+                    <p>Add rooms for scheduling classes</p>
+                    <a asp-controller="Setup" asp-action="AddRoom" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i> Add Room
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="enhanced-table">
+                        <thead>
+                            <tr>
+                                <th>Room ID</th>
+                                <th>Room Number</th>
+                                <th>Capacity</th>
+                                <th>Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in Model.Rooms)
+                            {
+                                <tr>
+                                    <td class="id-cell">#@r.Id</td>
+                                    <td>
+                                        <div class="fw-semibold">@r.RoomNumber</div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="fas fa-user-friends text-muted"></i>
+                                            <span class="fw-bold">@r.Capacity</span>
+                                            <span class="text-muted small">seats</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="enhanced-badge @(r.IsLabRoom ? "badge-room-lab" : "badge-room-classroom")">
+                                            <i class="fas @(r.IsLabRoom ? "fa-flask" : "fa-chalkboard")"></i>
+                                            @(r.IsLabRoom ? "Laboratory" : "Classroom")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-group">
+                                            <a asp-action="EditRoom" asp-route-id="@r.Id" class="btn-action btn-edit">
+                                                <i class="fas fa-edit"></i>
+                                                Edit
+                                            </a>
+                                            <a asp-action="DeleteRoom" asp-route-id="@r.Id" 
+                                               class="btn-action btn-delete"
+                                               onclick="return confirm('Are you sure you want to delete this room?\\n\\nRoom: @r.RoomNumber\\nCapacity: @r.Capacity seats\\nID: @r.Id')">
+                                                <i class="fas fa-trash"></i>
+                                                Delete
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+        <!-- Classes Section -->
+        <div class="data-section">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <i class="fas fa-users text-danger"></i>
+                    Class Sections
+                </h3>
+                <span class="section-count">
+                    @Model.Classes.Count sections • 
+                    @Model.Classes.Sum(c => c.TotalStudents) total students
+                </span>
+            </div>
+
+            @if (!Model.Classes.Any())
+            {
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <h4>No Classes Found</h4>
+                    <p>Add class sections for scheduling</p>
+                    <a asp-controller="Setup" asp-action="AddClass" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i> Add Class
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="enhanced-table">
+                        <thead>
+                            <tr>
+                                <th>Class ID</th>
+                                <th>Class Name</th>
+                                <th>Semester</th>
+                                <th>Section</th>
+                                <th>Students</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var cl in Model.Classes)
+                            {
+                                <tr>
+                                    <td class="id-cell">#@cl.Id</td>
+                                    <td>
+                                        <div class="fw-semibold">@cl.Name</div>
+                                    </td>
+                                    <td>
+                                        <span class="enhanced-badge badge-semester">
+                                            Semester @cl.Semester
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="enhanced-badge badge-section">
+                                            Section @cl.Section
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="fas fa-user-graduate text-muted"></i>
+                                            <span class="fw-bold">@cl.TotalStudents</span>
+                                            <span class="text-muted small">students</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="action-group">
+                                            <a asp-action="EditClass" asp-route-id="@cl.Id" class="btn-action btn-edit">
+                                                <i class="fas fa-edit"></i>
+                                                Edit
+                                            </a>
+                                            <a asp-action="DeleteClass" asp-route-id="@cl.Id" 
+                                               class="btn-action btn-delete"
+                                               onclick="return confirm('Are you sure you want to delete this class?\\n\\nClass: @cl.Name\\nSection: @cl.Section\\nStudents: @cl.TotalStudents\\nID: @cl.Id')">
+                                                <i class="fas fa-trash"></i>
+                                                Delete
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="danger-zone">
+            <h5>
+                <i class="fas fa-exclamation-triangle"></i>
+                Data Management Warning
+            </h5>
+            <p>
+                Deleting data will permanently remove entries and may affect timetable generation. 
+                Make sure to backup important data before performing any deletion operations.
+            </p>
+            <div class="d-flex gap-2">
+                <a href="/Setup/ResetData" class="btn btn-outline" style="border-color: #e74c3c; color: #e74c3c;"
+                   onclick="return confirm('⚠️ WARNING: This will delete ALL data!\\n\\nThis action cannot be undone.\\n\\nType CONFIRM to proceed:') === 'CONFIRM'">
+                    <i class="fas fa-trash-alt me-2"></i> Reset All Data
+                </a>
+            </div>
         </div>
     </div>
-
-    <section class="mb-5">
-        <h3 class="text-primary border-bottom pb-2">📚 Courses</h3>
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover shadow-sm">
-                <thead class="table-dark">
-                    <tr>
-                        <th>ID</th><th>Title</th><th>Cr. Hours</th><th>Category</th><th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var c in Model.Courses) {
-                        <tr>
-                            <td><strong>@c.Id</strong></td>
-                            <td>@c.Title</td>
-                            <td>@c.CreditHours</td>
-                            <td>
-                                <span class="badge @(c.IsLab ? "bg-warning text-dark" : "bg-info text-dark")">
-                                    @(c.IsLab ? "LAB (3h)" : "THEORY")
-                                </span>
-                            </td>
-                            <td>
-                                <a asp-action="DeleteCourse" asp-route-id="@c.Id" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this course?')">Delete</a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    <section class="mb-5">
-        <h3 class="text-primary border-bottom pb-2">👨‍🏫 Teachers</h3>
-        <table class="table table-bordered table-hover shadow-sm">
-            <thead class="table-primary">
-                <tr>
-                    <th>ID</th><th>Name</th><th>Type</th><th>Assigned Course IDs</th><th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var t in Model.Teachers) {
-                    <tr>
-                        <td>@t.Id</td>
-                        <td>@t.Name</td>
-                        <td><small class="text-muted">@t.TeacherType</small></td>
-                        <td>
-                            @if(t.AssignedCourseIds != null) {
-                                @foreach(var id in t.AssignedCourseIds) {
-                                    <span class="badge bg-secondary">#@id</span>
-                                }
-                            }
-                        </td>
-                        <td>
-                            <a asp-action="DeleteTeacher" asp-route-id="@t.Id" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete teacher?')">Delete</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </section>
-
-    <section class="mb-5">
-        <h3 class="text-primary border-bottom pb-2">🏫 Rooms</h3>
-        <table class="table table-bordered table-hover shadow-sm">
-            <thead class="table-success">
-                <tr>
-                    <th>ID</th><th>Room #</th><th>Capacity</th><th>Room Type</th><th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var r in Model.Rooms) {
-                    <tr>
-                        <td>@r.Id</td>
-                        <td>@r.RoomNumber</td>
-                        <td>@r.Capacity seats</td>
-                        <td>
-                            <span class="badge @(r.IsLabRoom ? "bg-danger" : "bg-success")">
-                                @(r.IsLabRoom ? "LABORATORY" : "CLASSROOM")
-                            </span>
-                        </td>
-                        <td>
-                            <a asp-action="DeleteRoom" asp-route-id="@r.Id" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete room?')">Delete</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </section>
-
-    <section class="mb-5">
-        <h3 class="text-primary border-bottom pb-2">👥 Class Sections</h3>
-        <table class="table table-bordered table-hover shadow-sm">
-            <thead class="table-info">
-                <tr>
-                    <th>ID</th><th>Name</th><th>Sem</th><th>Sec</th><th>Total Std.</th><th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var cl in Model.Classes) {
-                    <tr>
-                        <td>@cl.Id</td>
-                        <td>@cl.Name</td>
-                        <td>@cl.Semester</td>
-                        <td>@cl.Section</td>
-                        <td>@cl.TotalStudents</td>
-                        <td>
-                            <a asp-action="DeleteClass" asp-route-id="@cl.Id" class="btn btn-sm btn-danger" onclick="return confirm('Delete class?')">Delete</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </section>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add animation to table rows
+        const rows = document.querySelectorAll('.enhanced-table tbody tr');
+        rows.forEach((row, index) => {
+            row.style.animationDelay = `${index * 0.03}s`;
+        });
+        
+        // Add search functionality
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.placeholder = 'Search in current section...';
+        searchInput.className = 'form-control mb-3';
+        searchInput.style.maxWidth = '300px';
+        
+        // Add search to each section
+        document.querySelectorAll('.data-section').forEach(section => {
+            const searchClone = searchInput.cloneNode(true);
+            searchClone.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                const rows = section.querySelectorAll('tbody tr');
+                
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchTerm) ? '' : 'none';
+                });
+            });
+            
+            const sectionHeader = section.querySelector('.section-header');
+            sectionHeader.insertAdjacentElement('afterend', searchClone);
+        });
+        
+        // Add row highlight on hover
+        rows.forEach(row => {
+            row.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = '#f8fafc';
+            });
+            
+            row.addEventListener('mouseleave', function() {
+                this.style.backgroundColor = '';
+            });
+        });
+    });
+</script>

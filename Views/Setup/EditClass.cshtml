@@ -1,0 +1,523 @@
+@model dsa_project.Models.Class
+
+@{
+    ViewData["Title"] = "Edit Class Section";
+}
+
+<link rel="stylesheet" href="~/css/main.css">
+<link rel="stylesheet" href="~/css/components.css">
+<link rel="stylesheet" href="~/css/forms.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="form-section">
+    <div class="container">
+        <div class="form-container">
+            <!-- Form Steps -->
+            <div class="form-steps mb-4">
+                <div class="form-step">
+                    <div class="step-number active">1</div>
+                    <div class="step-label">Basic Info</div>
+                </div>
+                <div class="form-step">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Student & Courses</div>
+                </div>
+                <div class="form-step">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Review & Update</div>
+                </div>
+            </div>
+
+            <!-- Main Form Card -->
+            <div class="form-card form-class">
+                <div class="form-header">
+                    <h1 class="form-title">
+                        <i class="fas fa-edit"></i>
+                        Edit Class Section
+                    </h1>
+                    <div class="text-center mt-2" style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">
+                        <i class="fas fa-info-circle"></i>
+                        Editing Class ID: <strong>#@Model.Id</strong>
+                    </div>
+                </div>
+
+                <div class="form-body">
+                    <form asp-action="EditClass" method="post" id="editClassForm">
+                        <input type="hidden" asp-for="Id" />
+                        
+                        <div class="form-grid">
+                            <!-- Class Name -->
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-university"></i>
+                                    Class Name
+                                </label>
+                                <input asp-for="Name" 
+                                       class="form-control form-control-lg" 
+                                       placeholder="e.g. BSCS, BBA, BEE" 
+                                       required 
+                                       oninput="updatePreview()" />
+                                <div class="form-hint">
+                                    <i class="fas fa-info-circle"></i>
+                                    Base name of the degree program
+                                </div>
+                            </div>
+
+                            <!-- Semester -->
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    Semester
+                                </label>
+                                <input asp-for="Semester" 
+                                       type="number" 
+                                       class="form-control form-control-lg" 
+                                       min="1" 
+                                       max="8" 
+                                       required 
+                                       oninput="updatePreview()" />
+                                <div class="form-hint">
+                                    <i class="fas fa-graduation-cap"></i>
+                                    Academic semester (1-8)
+                                </div>
+                            </div>
+
+                            <!-- Section -->
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-layer-group"></i>
+                                    Section
+                                </label>
+                                <select asp-for="Section" 
+                                        class="form-select form-control-lg" 
+                                        onchange="updatePreview()">
+                                    <option value="A">Section A</option>
+                                    <option value="B">Section B</option>
+                                    <option value="C">Section C</option>
+                                    <option value="D">Section D</option>
+                                </select>
+                                <div class="form-hint">
+                                    <i class="fas fa-users"></i>
+                                    Different sections can have separate timetables
+                                </div>
+                            </div>
+
+                            <!-- Total Students -->
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-user-graduate"></i>
+                                    Total Students
+                                </label>
+                                <input asp-for="TotalStudents" 
+                                       type="number" 
+                                       class="form-control form-control-lg" 
+                                       placeholder="e.g. 50" 
+                                       required 
+                                       min="1" 
+                                       max="200"
+                                       oninput="updatePreview()" />
+                                <div class="form-hint">
+                                    <i class="fas fa-users"></i>
+                                    Current enrollment in this section
+                                </div>
+                                
+                                <!-- Student Capacity Indicator -->
+                                <div class="room-capacity-info mt-2">
+                                    <div style="font-size: 0.85rem; color: #64748b; white-space: nowrap;">
+                                        Class Size:
+                                    </div>
+                                    <div class="capacity-indicator">
+                                        <div class="capacity-fill" id="studentCapacityFill" style="width: 0%"></div>
+                                    </div>
+                                    <div style="font-size: 0.85rem; color: #2c3e50; font-weight: 500;">
+                                        <span id="studentCountText">0</span> students
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Course Assignments -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="fas fa-book"></i>
+                                Course Assignments
+                            </label>
+                            <div class="course-id-input">
+                                <input name="courseIdsInput" 
+                                       value="@ViewBag.CourseIdsInput" 
+                                       class="form-control form-control-lg" 
+                                       placeholder="Enter course IDs separated by commas (e.g. 1, 2, 5)" 
+                                       required 
+                                       id="courseIdsInput" />
+                                <div class="form-hint">
+                                    <i class="fas fa-lightbulb"></i>
+                                    Check 'Manage Data' to see available Course IDs
+                                </div>
+                                
+                                <!-- Course ID Tags Display -->
+                                <div class="course-tags" id="courseTags">
+                                    <!-- Tags will be added here by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Warning Alert -->
+                        <div class="alert" style="background: rgba(243, 156, 18, 0.1); border-left-color: #f39c12; color: #d35400;">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div>
+                                    <strong>Note:</strong> 
+                                    <span class="ms-1">Changing course assignments may affect existing timetables. Ensure room capacities are sufficient for this class size.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit">
+                                <i class="fas fa-save"></i>
+                                Update Class
+                            </button>
+                            <a asp-action="Manage" class="btn-back">
+                                <i class="fas fa-times"></i>
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="card mt-4" style="border: 1px solid #e2e8f0; border-radius: 12px;">
+                <div class="card-body">
+                    <h5 class="card-title" style="color: #2c3e50;">
+                        <i class="fas fa-question-circle text-primary me-2"></i>
+                        Editing Guidelines
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h6 class="fw-bold" style="color: #e74c3c;">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Important Notes
+                                </h6>
+                                <ul class="list-unstyled small mb-0">
+                                    <li class="mb-1">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Changes affect existing timetables
+                                    </li>
+                                    <li class="mb-1">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Re-generate timetable after updates
+                                    </li>
+                                    <li class="mb-1">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Check room capacities match student count
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Verify course IDs are still valid
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h6 class="fw-bold" style="color: #27ae60;">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    Best Practices
+                                </h6>
+                                <ul class="list-unstyled small mb-0">
+                                    <li class="mb-1">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Keep student count realistic
+                                    </li>
+                                    <li class="mb-1">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Assign appropriate course load
+                                    </li>
+                                    <li class="mb-1">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Update before generating schedules
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Review changes in preview
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <h6 class="fw-bold" style="color: #2c3e50;">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Class Size Recommendations
+                        </h6>
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Semester</th>
+                                    <th>Typical Class Size</th>
+                                    <th>Course Load</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1-2 (Foundation)</td>
+                                    <td>50-70 students</td>
+                                    <td>5-6 courses</td>
+                                </tr>
+                                <tr>
+                                    <td>3-4 (Intermediate)</td>
+                                    <td>40-60 students</td>
+                                    <td>5-6 courses</td>
+                                </tr>
+                                <tr>
+                                    <td>5-6 (Advanced)</td>
+                                    <td>30-50 students</td>
+                                    <td>4-5 courses</td>
+                                </tr>
+                                <tr>
+                                    <td>7-8 (Final Year)</td>
+                                    <td>20-40 students</td>
+                                    <td>3-4 courses</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const courseIdsInput = document.getElementById('courseIdsInput');
+        const courseTags = document.getElementById('courseTags');
+        const studentCapacityFill = document.getElementById('studentCapacityFill');
+        const studentCountText = document.getElementById('studentCountText');
+        
+        // Initialize course IDs from ViewBag
+        if (courseIdsInput.value) {
+            updateCourseTags();
+        }
+        
+        // Parse and display course IDs as tags
+        function updateCourseTags() {
+            const input = courseIdsInput.value;
+            const courseIds = input.split(',').filter(id => id.trim() !== '');
+            
+            courseTags.innerHTML = '';
+            courseIds.forEach(id => {
+                const tag = document.createElement('span');
+                tag.className = 'course-tag';
+                tag.innerHTML = `<i class="fas fa-hashtag"></i>${id.trim()}`;
+                courseTags.appendChild(tag);
+            });
+            
+            updatePreview();
+        }
+        
+        courseIdsInput.addEventListener('input', updateCourseTags);
+        
+        // Update student capacity indicator
+        function updateStudentCapacityIndicator(count) {
+            const studentCount = parseInt(count) || 0;
+            
+            // Calculate percentage (max 200 for 100%)
+            const percentage = Math.min((studentCount / 200) * 100, 100);
+            studentCapacityFill.style.width = percentage + '%';
+            studentCountText.textContent = studentCount;
+            
+            // Update color based on student count
+            if (studentCount < 20) {
+                studentCapacityFill.style.background = 'linear-gradient(90deg, #e74c3c, #c0392b)';
+            } else if (studentCount < 40) {
+                studentCapacityFill.style.background = 'linear-gradient(90deg, #f39c12, #e67e22)';
+            } else if (studentCount < 70) {
+                studentCapacityFill.style.background = 'linear-gradient(90deg, #2ecc71, #27ae60)';
+            } else if (studentCount < 100) {
+                studentCapacityFill.style.background = 'linear-gradient(90deg, #3498db, #2980b9)';
+            } else {
+                studentCapacityFill.style.background = 'linear-gradient(90deg, #9b59b6, #8e44ad)';
+            }
+        }
+        
+        // Update preview function
+        window.updatePreview = function() {
+            const nameInput = document.querySelector('input[asp-for="Name"]');
+            const semesterInput = document.querySelector('input[asp-for="Semester"]');
+            const sectionSelect = document.querySelector('select[asp-for="Section"]');
+            const studentsInput = document.querySelector('input[asp-for="TotalStudents"]');
+            const coursesInput = document.getElementById('courseIdsInput');
+            
+            // Update preview values
+            document.getElementById('previewName').textContent = nameInput.value || '@Model.Name';
+            document.getElementById('previewSemester').textContent = semesterInput.value ? 
+                'Semester ' + semesterInput.value : 'Semester @Model.Semester';
+            document.getElementById('previewSection').textContent = sectionSelect ? 
+                'Section ' + sectionSelect.value : 'Section @Model.Section';
+            document.getElementById('previewStudents').textContent = studentsInput.value ? 
+                studentsInput.value + ' students' : '@Model.TotalStudents students';
+            
+            // Parse course IDs for preview
+            if (coursesInput.value) {
+                const courseIds = coursesInput.value.split(',')
+                    .filter(id => id.trim() !== '')
+                    .map(id => '#' + id.trim())
+                    .join(', ');
+                document.getElementById('previewCourses').textContent = courseIds || '-';
+            } else {
+                document.getElementById('previewCourses').textContent = '-';
+            }
+            
+            // Update capacity indicator
+            const studentCount = parseInt(studentsInput.value) || @Model.TotalStudents;
+            updateStudentCapacityIndicator(studentCount);
+            
+            // Show warning for large classes
+            const semester = parseInt(semesterInput.value) || @Model.Semester;
+            if (studentCount > 70 && semester >= 5) {
+                const warning = document.querySelector('.alert');
+                if (warning) {
+                    warning.innerHTML = `
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div>
+                                <strong>Warning:</strong> 
+                                <span class="ms-1">Large class size (${studentCount} students) for advanced semester (${semester}). Check room capacities.</span>
+                            </div>
+                        </div>
+                    `;
+                    warning.style.background = 'rgba(231, 76, 60, 0.1)';
+                    warning.style.borderLeftColor = '#e74c3c';
+                    warning.style.color = '#c0392b';
+                }
+            }
+        };
+        
+        // Initialize preview
+        updatePreview();
+        
+        // Form validation
+        const form = document.getElementById('editClassForm');
+        form.addEventListener('submit', function(e) {
+            const name = document.querySelector('input[asp-for="Name"]').value;
+            const semester = document.querySelector('input[asp-for="Semester"]').value;
+            const section = document.querySelector('select[asp-for="Section"]').value;
+            const students = document.querySelector('input[asp-for="TotalStudents"]').value;
+            const courseIds = document.getElementById('courseIdsInput').value;
+            
+            // Basic validation
+            if (!name || !semester || !section || !students || !courseIds) {
+                e.preventDefault();
+                showAlert('Please fill in all required fields.', 'error');
+                return false;
+            }
+            
+            // Validate student count
+            const studentCount = parseInt(students);
+            if (studentCount < 1 || studentCount > 200) {
+                e.preventDefault();
+                showAlert('Please enter valid number of students (1-200).', 'error');
+                return false;
+            }
+            
+            // Validate semester
+            const semesterNum = parseInt(semester);
+            if (semesterNum < 1 || semesterNum > 8) {
+                e.preventDefault();
+                showAlert('Please enter valid semester (1-8).', 'error');
+                return false;
+            }
+            
+            // Validate course IDs format
+            const courseIdArray = courseIds.split(',').filter(id => id.trim() !== '');
+            const invalidIds = courseIdArray.filter(id => isNaN(id) || id.trim() === '');
+            if (invalidIds.length > 0) {
+                e.preventDefault();
+                showAlert('Please enter valid numeric course IDs.', 'error');
+                return false;
+            }
+            
+            // Check if section is single letter
+            if (section.length !== 1 || !/[A-D]/i.test(section)) {
+                if (!confirm('Section should be A, B, C, or D. Continue with "' + section + '"?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            
+            // Check course load based on semester
+            const courseCount = courseIdArray.length;
+            if (semesterNum <= 2 && courseCount < 4) {
+                if (!confirm('Foundation semesters typically have 5-6 courses. Continue with ' + courseCount + ' courses?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            } else if (semesterNum >= 7 && courseCount > 4) {
+                if (!confirm('Final year semesters typically have 3-4 courses. Continue with ' + courseCount + ' courses?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            
+            return true;
+        });
+        
+        // Helper function to show alerts
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            const formBody = document.querySelector('.form-body');
+            const existingAlert = formBody.querySelector('.alert');
+            if (existingAlert && !existingAlert.classList.contains('form-alert')) {
+                existingAlert.remove();
+            }
+            
+            formBody.insertBefore(alertDiv, formBody.firstChild);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        // Add input focus effects
+        const inputs = document.querySelectorAll('.form-control, .form-select');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'translateY(-2px)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Auto-set typical course count based on semester
+        const semesterInput = document.querySelector('input[asp-for="Semester"]');
+        semesterInput.addEventListener('blur', function() {
+            const semester = parseInt(this.value);
+            if (semester >= 1 && semester <= 8) {
+                // Suggest typical course count
+                let typicalCourses = 5;
+                if (semester >= 7) typicalCourses = 4;
+                if (semester >= 8) typicalCourses = 3;
+                
+                const currentCourses = courseIdsInput.value.split(',').filter(id => id.trim() !== '').length;
+                if (currentCourses === 0 && typicalCourses > 0) {
+                    courseIdsInput.setAttribute('placeholder', `Typically ${typicalCourses} courses for semester ${semester}`);
+                }
+            }
+        });
+    });
+</script>

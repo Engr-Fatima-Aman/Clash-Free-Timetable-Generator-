@@ -1,56 +1,452 @@
 @model dsa_project.Models.Teacher
 
-<div class="container mt-5">
-    <div class="card shadow-lg border-0">
-        <div class="card-header bg-dark text-white text-center">
-            <h3 class="mb-0">👨‍🏫 Add New Teacher</h3>
-        </div>
-        <div class="card-body p-4">
-            @if (ViewBag.Message != null)
-            {
-                <div class="alert alert-success alert-dismissible fade show">
-                    @ViewBag.Message
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            }
+@{
+    ViewData["Title"] = "Add New Teacher";
+}
 
-            <form asp-action="AddTeacher" method="post">
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Full Name:</label>
-                    <input name="Name" class="form-control form-control-lg" placeholder="e.g. Dr. Ali Ahmed" required />
+<link rel="stylesheet" href="~/css/main.css">
+<link rel="stylesheet" href="~/css/components.css">
+<link rel="stylesheet" href="~/css/forms.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="form-section">
+    <div class="container">
+        <div class="form-container">
+            <!-- Form Steps -->
+            <div class="form-steps mb-4">
+                <div class="form-step">
+                    <div class="step-number active">1</div>
+                    <div class="step-label">Basic Info</div>
+                </div>
+                <div class="form-step">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Faculty Type</div>
+                </div>
+                <div class="form-step">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Course Assignments</div>
+                </div>
+            </div>
+
+            <!-- Main Form Card -->
+            <div class="form-card form-teacher">
+                <div class="form-header">
+                    <h1 class="form-title">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        Add New Teacher
+                    </h1>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Faculty Type:</label>
-                    <select name="TeacherType" id="FacultyType" class="form-select form-control-lg" onchange="toggleSlots()">
-                        <option value="Permanent">Permanent (Full-Time)</option>
-                        <option value="Visiting">Visiting (Part-Time)</option>
-                    </select>
-                </div>
-                
-                <div id="SlotSection" class="alert alert-info" style="display:none;">
-                    <small>Note: For Visiting faculty, ensure courses are assigned only on their available days.</small>
-                </div>
+                <div class="form-body">
+                    @if (ViewBag.Message != null)
+                    {
+                        <div class="form-alert">
+                            <i class="fas fa-check-circle"></i>
+                            @ViewBag.Message
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="float: right;"></button>
+                        </div>
+                    }
 
-                <div class="mb-4">
-                    <label class="form-label fw-bold">Assigned Course IDs:</label>
-                    <input name="AssignedCoursesStr" class="form-control" placeholder="e.g. 1, 2, 5" required />
-                    <small class="text-muted">Enter IDs of courses this teacher will teach (separated by commas).</small>
-                </div>
+                    <form asp-action="AddTeacher" method="post" id="teacherForm">
+                        <div class="form-grid">
+                            <!-- Teacher Name -->
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-user"></i>
+                                    Full Name
+                                </label>
+                                <input name="Name" 
+                                       class="form-control form-control-lg" 
+                                       placeholder="e.g. Dr. Ali Ahmed" 
+                                       required 
+                                       oninput="updatePreview()" />
+                                <div class="form-hint">
+                                    <i class="fas fa-info-circle"></i>
+                                    Include title (Dr., Prof., Mr., Ms.) if applicable
+                                </div>
+                            </div>
 
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary btn-lg shadow">✅ Save Teacher Info</button>
-                    <a href="/Setup/Manage" class="btn btn-outline-secondary">Back to Manage</a>
+                            <!-- Faculty Type -->
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-user-tie"></i>
+                                    Faculty Type
+                                </label>
+                                <select name="TeacherType" 
+                                        id="FacultyType" 
+                                        class="form-select form-control-lg" 
+                                        onchange="updateFacultyType()">
+                                    <option value="Permanent">Permanent (Full-Time)</option>
+                                    <option value="Visiting">Visiting (Part-Time)</option>
+                                </select>
+                                <div class="form-hint">
+                                    <i class="fas fa-info-circle"></i>
+                                    Affects scheduling priority and availability
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Visiting Faculty Notice -->
+                        <div class="alert" id="visitingNotice" style="display: none; background: rgba(243, 156, 18, 0.1); border-left-color: #f39c12; color: #d35400;">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-clock" style="font-size: 1.25rem;"></i>
+                                <div>
+                                    <strong>Visiting Faculty Note:</strong> 
+                                    <span class="ms-1">For visiting faculty, courses will be scheduled based on limited availability.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Course Assignments -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="fas fa-book"></i>
+                                Course Assignments
+                            </label>
+                            <div class="course-id-input">
+                                <input name="AssignedCoursesStr" 
+                                       class="form-control form-control-lg" 
+                                       placeholder="Enter course IDs separated by commas (e.g. 1, 2, 5)" 
+                                       required 
+                                       id="courseIdsInput" />
+                                <div class="form-hint">
+                                    <i class="fas fa-lightbulb"></i>
+                                    Check 'Manage Data' to see available Course IDs
+                                </div>
+                                
+                                <!-- Course ID Tags Display -->
+                                <div class="course-tags" id="courseTags">
+                                    <!-- Tags will be added here by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Workload Warning -->
+                        <div class="alert" id="workloadWarning" style="display: none; background: rgba(231, 76, 60, 0.05); border-left-color: #e74c3c; color: #c0392b;">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div>
+                                    <strong>Workload Alert:</strong> 
+                                    <span id="workloadMessage" class="ms-1"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit">
+                                <i class="fas fa-save"></i>
+                                Save Teacher
+                            </button>
+                            <a href="/Setup/Manage" class="btn-back">
+                                <i class="fas fa-arrow-left"></i>
+                                Back to Manage
+                            </a>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
+
+            <!-- Help Section -->
+            <div class="card mt-4" style="border: 1px solid #e2e8f0; border-radius: 12px;">
+                <div class="card-body">
+                    <h5 class="card-title" style="color: #2c3e50;">
+                        <i class="fas fa-question-circle text-primary me-2"></i>
+                        Teacher Configuration Guide
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h6 class="fw-bold" style="color: #27ae60;">
+                                    <i class="fas fa-user-check me-2"></i>
+                                    Permanent Faculty
+                                </h6>
+                                <ul class="list-unstyled small mb-0">
+                                    <li class="mb-1">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Full-time university staff
+                                    </li>
+                                    <li class="mb-1">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Available all weekdays
+                                    </li>
+                                    <li class="mb-1">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Higher scheduling priority
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Can be assigned multiple courses
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h6 class="fw-bold" style="color: #f39c12;">
+                                    <i class="fas fa-user-clock me-2"></i>
+                                    Visiting Faculty
+                                </h6>
+                                <ul class="list-unstyled small mb-0">
+                                    <li class="mb-1">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Part-time or guest lecturers
+                                    </li>
+                                    <li class="mb-1">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Limited availability days
+                                    </li>
+                                    <li class="mb-1">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Lower scheduling priority
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Usually fewer course assignments
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <h6 class="fw-bold" style="color: #2c3e50;">
+                            <i class="fas fa-chart-pie me-2"></i>
+                            Course Assignment Guidelines
+                        </h6>
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Faculty Type</th>
+                                    <th>Recommended Max Courses</th>
+                                    <th>Scheduling Flexibility</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Permanent Faculty</td>
+                                    <td>3-5 courses</td>
+                                    <td>High (all days)</td>
+                                </tr>
+                                <tr>
+                                    <td>Visiting Faculty</td>
+                                    <td>1-2 courses</td>
+                                    <td>Limited (specific days)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    function toggleSlots() {
-        var type = document.getElementById("FacultyType").value;
-        var section = document.getElementById("SlotSection");
-        section.style.display = (type === "Visiting") ? "block" : "none";
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+        const facultyTypeSelect = document.getElementById('FacultyType');
+        const visitingNotice = document.getElementById('visitingNotice');
+        const workloadWarning = document.getElementById('workloadWarning');
+        const courseIdsInput = document.getElementById('courseIdsInput');
+        const courseTags = document.getElementById('courseTags');
+        
+        // Parse and display course IDs as tags
+        function updateCourseTags() {
+            const input = courseIdsInput.value;
+            const courseIds = input.split(',').filter(id => id.trim() !== '');
+            
+            courseTags.innerHTML = '';
+            courseIds.forEach(id => {
+                const tag = document.createElement('span');
+                tag.className = 'course-tag';
+                tag.innerHTML = `<i class="fas fa-hashtag"></i>${id.trim()}`;
+                courseTags.appendChild(tag);
+            });
+            
+            updateWorkloadWarning();
+            updatePreview();
+        }
+        
+        courseIdsInput.addEventListener('input', updateCourseTags);
+        
+        // Update faculty type
+        window.updateFacultyType = function() {
+            const isVisiting = facultyTypeSelect.value === 'Visiting';
+            visitingNotice.style.display = isVisiting ? 'block' : 'none';
+            updateWorkloadWarning();
+            updatePreview();
+        };
+        
+        // Update workload warning
+        function updateWorkloadWarning() {
+            const isVisiting = facultyTypeSelect.value === 'Visiting';
+            const courseIds = courseIdsInput.value.split(',').filter(id => id.trim() !== '');
+            const courseCount = courseIds.length;
+            
+            workloadWarning.style.display = 'none';
+            
+            if (courseCount === 0) return;
+            
+            let message = '';
+            let showWarning = false;
+            
+            if (isVisiting) {
+                if (courseCount > 2) {
+                    message = `Visiting faculty assigned ${courseCount} courses. Recommended maximum is 2 courses.`;
+                    showWarning = true;
+                } else if (courseCount === 2) {
+                    message = 'Visiting faculty assigned 2 courses. Ensure they have sufficient time availability.';
+                    showWarning = true;
+                }
+            } else {
+                if (courseCount > 5) {
+                    message = `Permanent faculty assigned ${courseCount} courses. Maximum recommended is 5 courses.`;
+                    showWarning = true;
+                } else if (courseCount > 3) {
+                    message = `Permanent faculty assigned ${courseCount} courses. Consider workload distribution.`;
+                    showWarning = true;
+                }
+            }
+            
+            if (showWarning) {
+                workloadWarning.style.display = 'block';
+                document.getElementById('workloadMessage').textContent = message;
+            }
+        }
+        
+        // Update preview function
+        window.updatePreview = function() {
+            const nameInput = document.querySelector('input[name="Name"]');
+            const facultyType = facultyTypeSelect.value;
+            const courseIds = courseIdsInput.value.split(',').filter(id => id.trim() !== '');
+            
+            // Update preview values
+            document.getElementById('previewName').textContent = nameInput.value || '-';
+            document.getElementById('previewType').textContent = facultyType;
+            document.getElementById('previewCourses').textContent = courseIds.length > 0 ? 
+                courseIds.length + ' courses' : 'None assigned';
+            document.getElementById('previewPriority').textContent = facultyType === 'Permanent' ? 
+                'High (All days)' : 'Medium (Limited days)';
+            
+            // Update workload status
+            let workloadStatus = 'Balanced';
+            if (courseIds.length > 0) {
+                if (facultyType === 'Permanent') {
+                    if (courseIds.length <= 2) workloadStatus = 'Light';
+                    else if (courseIds.length <= 4) workloadStatus = 'Moderate';
+                    else workloadStatus = 'Heavy';
+                } else {
+                    if (courseIds.length === 1) workloadStatus = 'Appropriate';
+                    else workloadStatus = 'Heavy (for visiting)';
+                }
+            }
+            document.getElementById('previewWorkload').textContent = workloadStatus;
+        };
+        
+        // Initialize preview and tags
+        updateFacultyType();
+        updateCourseTags();
+        updatePreview();
+        
+        // Form validation
+        const form = document.getElementById('teacherForm');
+        form.addEventListener('submit', function(e) {
+            const name = document.querySelector('input[name="Name"]').value;
+            const courseIdsStr = document.getElementById('courseIdsInput').value;
+            
+            // Basic validation
+            if (!name || !courseIdsStr) {
+                e.preventDefault();
+                showAlert('Please fill in all required fields.', 'error');
+                return false;
+            }
+            
+            // Validate course IDs format
+            const courseIdArray = courseIdsStr.split(',').filter(id => id.trim() !== '');
+            const invalidIds = courseIdArray.filter(id => isNaN(id) || id.trim() === '');
+            if (invalidIds.length > 0) {
+                e.preventDefault();
+                showAlert('Please enter valid numeric course IDs.', 'error');
+                return false;
+            }
+            
+            // Validate workload based on faculty type
+            const facultyType = facultyTypeSelect.value;
+            const courseCount = courseIdArray.length;
+            
+            if (facultyType === 'Visiting' && courseCount > 3) {
+                if (!confirm('⚠️ Warning: Visiting faculty assigned ' + courseCount + ' courses.\n\nVisiting faculty typically handle 1-2 courses.\n\nContinue anyway?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            } else if (facultyType === 'Permanent' && courseCount > 6) {
+                if (!confirm('⚠️ Warning: Permanent faculty assigned ' + courseCount + ' courses.\n\nMaximum recommended is 5-6 courses.\n\nContinue anyway?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            
+            return true;
+        });
+        
+        // Helper function to show alerts
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            const formBody = document.querySelector('.form-body');
+            const existingAlert = formBody.querySelector('.form-alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            formBody.insertBefore(alertDiv, formBody.firstChild);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        // Add input focus effects
+        const inputs = document.querySelectorAll('.form-control, .form-select');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'translateY(-2px)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Auto-suggest course IDs based on faculty type
+        courseIdsInput.addEventListener('focus', function() {
+            const facultyType = facultyTypeSelect.value;
+            const currentValue = this.value;
+            
+            if (!currentValue) {
+                if (facultyType === 'Visiting') {
+                    this.setAttribute('placeholder', '1-2 course IDs recommended (e.g. 1, 2)');
+                } else {
+                    this.setAttribute('placeholder', '3-5 course IDs typical (e.g. 1, 2, 5, 7)');
+                }
+            }
+        });
+        
+        // Initialize faculty type based on name (if contains "Dr." or "Prof.")
+        const nameInput = document.querySelector('input[name="Name"]');
+        nameInput.addEventListener('blur', function() {
+            const name = this.value.toLowerCase();
+            if (name.includes('dr.') || name.includes('prof.')) {
+                facultyTypeSelect.value = 'Permanent';
+                updateFacultyType();
+            }
+        });
+    });
 </script>

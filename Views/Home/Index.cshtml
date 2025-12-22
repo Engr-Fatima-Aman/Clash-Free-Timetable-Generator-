@@ -2,49 +2,225 @@
     ViewData["Title"] = "Timetable Generator";
 }
 
-<div class="text-center" style="padding-top: 50px;">
-    <h1 class="display-4 fw-bold text-dark">Timetable Generator</h1>
-    <p class="lead text-secondary">Automatic conflict-free scheduling using Backtracking Algorithm.</p>
-    
-    @if(ViewBag.Error != null)
-    {
-        <div class="alert alert-danger shadow-sm mx-auto" style="max-width: 800px;">
-            <strong>⚠️ Error:</strong> @ViewBag.Error
-        </div>
-    }
-
-    <div class="mt-5 mb-4">
-        <h3 class="text-primary">Step 1: Setup Data</h3>
-        <p class="text-muted">Please add data in the following sequence for best results:</p>
-        
-        <div class="btn-group flex-wrap justify-content-center" role="group">
-            <a href="/Setup/AddCourse" class="btn btn-outline-primary m-1 shadow-sm">Add Courses</a>
-            <a href="/Setup/AddRoom" class="btn btn-outline-primary m-1 shadow-sm">Add Rooms</a>
-            <a href="/Setup/AddTeacher" class="btn btn-outline-primary m-1 shadow-sm">Add Teachers</a>
-            <a href="/Setup/AddClass" class="btn btn-outline-primary m-1 shadow-sm">Add Classes</a>
-        </div>
-
-        <div class="mt-4" style="max-width: 600px; margin: 0 auto;">
-            <a href="/Setup/Manage" class="btn btn-dark btn-lg w-100 shadow">⚙️ Manage & Review Data</a>
-        </div>
-    </div>
-
-    <hr class="my-5" style="max-width: 800px; margin: 0 auto;" />
-
-    <div class="card mt-4 shadow" style="width: 26rem; margin: 0 auto; border: 2px solid #28a745; border-radius: 15px;">
-        <div class="card-body">
-            <h5 class="card-title text-success fw-bold">Step 2: Solve & Generate</h5>
-            <p class="card-text text-muted">Run the Backtracking Algorithm to create your timetable.</p>
-            
-            <a href="/Timetable/Generate" class="btn btn-success btn-lg w-100 fw-bold py-3 shadow-sm">
-                🚀 Generate Timetable
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SchedulePro</title>
+    <link rel="stylesheet" href="~/css/main.css" />
+    <link rel="stylesheet" href="~/css/components.css" />
+    <link rel="stylesheet" href="~/css/home.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-content">
+            <a href="/" class="logo">
+                <i class="fas fa-calendar-alt logo-icon"></i>
+                <span>SchedulePro</span>
             </a>
+            <nav>
+                <a href="/Setup/Manage" class="btn btn-outline">
+                    <i class="fas fa-tasks"></i> Manage Data
+                </a>
+            </nav>
         </div>
-    </div>
-    
-    <div class="mt-5 pt-4">
-        <a href="/Setup/ResetData" class="btn btn-outline-danger btn-sm opacity-75" onclick="return confirm('WARNING: This will delete ALL saved data. Are you sure?');">
-            🗑️ Reset / Clear All Data
-        </a>
-    </div>
-</div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <h1 class="hero-title">Timetable Generator</h1>
+                <p class="hero-subtitle">
+                    Create optimized, conflict-free schedules using advanced backtracking algorithms.
+                    Professional scheduling made simple.
+                </p>
+                <span class="badge">
+                    <i class="fas fa-check-circle"></i> No Conflicts
+                </span>
+            </div>
+        </section>
+
+        <!-- Setup Process -->
+        <section class="setup-section">
+            <div class="container">
+                <h2 class="section-title">Configure Your Schedule</h2>
+                <p class="section-subtitle">
+                    Set up your data in four simple steps for optimal scheduling results
+                </p>
+
+                <!-- Progress Steps -->
+                <div class="steps">
+                    <div class="step active">
+                        <div class="step-number">1</div>
+                        <span class="step-label">Courses</span>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <span class="step-label">Rooms</span>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <span class="step-label">Teachers</span>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <span class="step-label">Classes</span>
+                    </div>
+                </div>
+
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <strong>Setup Required:</strong> @ViewBag.Error
+                    </div>
+                }
+
+                <!-- Data Configuration Cards -->
+                <div class="data-grid">
+                    <div class="card data-card">
+                        <div class="icon-wrapper">
+                            <i class="fas fa-book-open fa-lg"></i>
+                        </div>
+                        <h3>Define Courses</h3>
+                        <p>Add subjects with durations, requirements, and scheduling constraints.</p>
+                        <a href="/Setup/AddCourse" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Course
+                        </a>
+                    </div>
+
+                    <div class="card data-card">
+                        <div class="icon-wrapper">
+                            <i class="fas fa-door-open fa-lg"></i>
+                        </div>
+                        <h3>Configure Rooms</h3>
+                        <p>Set up available classrooms, labs, and their capacity constraints.</p>
+                        <a href="/Setup/AddRoom" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Room
+                        </a>
+                    </div>
+
+                    <div class="card data-card">
+                        <div class="icon-wrapper">
+                            <i class="fas fa-chalkboard-teacher fa-lg"></i>
+                        </div>
+                        <h3>Add Teachers</h3>
+                        <p>Register faculty members and define their availability schedules.</p>
+                        <a href="/Setup/AddTeacher" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Teacher
+                        </a>
+                    </div>
+
+                    <div class="card data-card">
+                        <div class="icon-wrapper">
+                            <i class="fas fa-users fa-lg"></i>
+                        </div>
+                        <h3>Create Classes</h3>
+                        <p>Define class groups, sections, and their specific requirements.</p>
+                        <a href="/Setup/AddClass" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Class
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Management Option -->
+                <div class="text-center" style="margin-top: 2rem;">
+                    <a href="/Setup/Manage" class="btn btn-secondary">
+                        <i class="fas fa-eye"></i> Review All Data
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Divider -->
+        <div class="container">
+            <div class="divider"></div>
+        </div>
+
+        <!-- Generation Section -->
+        <section class="generate-section">
+            <div class="container">
+                <div class="card generate-card">
+                    <div class="icon-wrapper" style="background-color: rgba(26, 188, 156, 0.1); color: var(--accent-color);">
+                        <i class="fas fa-magic fa-2x"></i>
+                    </div>
+                    <h2>Generate Timetable</h2>
+                    <p>
+                        Once all data is configured, generate an optimized timetable 
+                        using our backtracking algorithm.
+                    </p>
+                    <a href="/Timetable/Generate" class="btn btn-accent" style="padding: 14px 32px; font-size: 1.05rem;">
+                        <i class="fas fa-play-circle"></i> Generate Schedule
+                    </a>
+                    <p style="font-size: 0.85rem; margin-top: 1rem; color: var(--text-secondary);">
+                        <i class="fas fa-info-circle"></i> Ensures zero scheduling conflicts
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Management -->
+        <section class="setup-section" style="padding-top: 0;">
+            <div class="container">
+                <div class="danger-zone">
+                    <h4>
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Reset All Data
+                    </h4>
+                    <p>
+                        This action will permanently delete all courses, rooms, teachers, and classes.
+                        This cannot be undone.
+                    </p>
+                    <a href="/Setup/ResetData" 
+                       class="btn btn-outline" 
+                       style="border-color: #e74c3c; color: #e74c3c;"
+                       onclick="return confirm('⚠️ WARNING: All data will be permanently deleted.\n\nThis includes:\n• All courses\n• All rooms\n• All teachers\n• All classes\n\nType DELETE to confirm:') === 'DELETE'">
+                        <i class="fas fa-trash-alt"></i> Clear All Data
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer style="background-color: var(--surface); border-top: 1px solid var(--border-color); padding: 2rem 0; margin-top: 4rem;">
+        <div class="container">
+            <div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+                <p>© @DateTime.Now.Year SchedulePro - Professional Timetable Generator</p>
+                <p style="margin-top: 0.5rem; font-size: 0.85rem;">
+                    <i class="fas fa-code-branch"></i> Powered by Backtracking Algorithm
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Simple animation for cards on scroll
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.data-card');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            cards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                observer.observe(card);
+            });
+        });
+    </script>
+</body>
+</html>

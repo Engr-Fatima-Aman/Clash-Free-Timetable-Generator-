@@ -289,3 +289,9 @@ C:\University\Sem3\dsa-project\obj\Debug\net9.0\refint\dsa project.dll
 C:\University\Sem3\dsa-project\obj\Debug\net9.0\dsa project.pdb
 C:\University\Sem3\dsa-project\obj\Debug\net9.0\dsa project.genruntimeconfig.cache
 C:\University\Sem3\dsa-project\obj\Debug\net9.0\ref\dsa project.dll
+C:\University\Sem3\dsa-project\obj\Debug\net9.0\compressed\a80y7c9xfd-4mrcmmngtl.gz
+C:\University\Sem3\dsa-project\obj\Debug\net9.0\compressed\dfyc7kvlg0-qcx2hfio3b.gz
+C:\University\Sem3\dsa-project\obj\Debug\net9.0\compressed\fdzxea6c2g-zrzjz3v2ir.gz
+C:\University\Sem3\dsa-project\obj\Debug\net9.0\compressed\02uicrqmnl-bwdxu4pgve.gz
+C:\University\Sem3\dsa-project\obj\Debug\net9.0\compressed\18tftxwn7g-fiwy06r37f.gz
+C:\University\Sem3\dsa-project\obj\Debug\net9.0\compressed\eoc1k5ljyh-urle3ozmo4.gz

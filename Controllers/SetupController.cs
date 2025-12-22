@@ -33,7 +33,9 @@ namespace dsa_project.Controllers
             _dataService.SaveAllData(c, t, r, ts, cl, new List<TimetableAssignment>());
         }
 
-        // --- 1. COURSES ---
+        // ==========================================
+        // 1. COURSES EDIT & ADD
+        // ==========================================
         [HttpGet] public IActionResult AddCourse() => View();
         
         [HttpPost]
@@ -44,11 +46,31 @@ namespace dsa_project.Controllers
             course.Id = all.Any() ? all.Max(x => x.Id) + 1 : 1;
             c.AddCourse(course);
             SaveAllData(c, t, r, ts, cl);
-            ViewBag.Message = $"Course '{course.Title}' Added Successfully!";
-            return View();
+            return RedirectToAction("Manage");
         }
 
-        // --- 2. ROOMS ---
+        [HttpGet]
+        public IActionResult EditCourse(int id)
+        {
+            LoadAllData(out var c, out _, out _, out _, out _);
+            var course = c.GetAllCourses().FirstOrDefault(x => x.Id == id);
+            if (course == null) return NotFound();
+            return View(course);
+        }
+
+        [HttpPost]
+        public IActionResult EditCourse(Course course)
+        {
+            LoadAllData(out var c, out var t, out var r, out var ts, out var cl);
+            c.RemoveCourse(course.Id); // Purana remove kiya
+            c.AddCourse(course);       // Naya add kiya (Update)
+            SaveAllData(c, t, r, ts, cl);
+            return RedirectToAction("Manage");
+        }
+
+        // ==========================================
+        // 2. ROOMS EDIT & ADD
+        // ==========================================
         [HttpGet] public IActionResult AddRoom() => View();
         
         [HttpPost]
@@ -59,16 +81,36 @@ namespace dsa_project.Controllers
             room.Id = all.Any() ? all.Max(x => x.Id) + 1 : 1;
             r.AddRoom(room);
             SaveAllData(c, t, r, ts, cl);
-            ViewBag.Message = $"Room '{room.RoomNumber}' Added Successfully!";
-            return View();
+            return RedirectToAction("Manage");
         }
 
-        // --- 3. TEACHERS ---
+        [HttpGet]
+        public IActionResult EditRoom(int id)
+        {
+            LoadAllData(out _, out _, out var r, out _, out _);
+            var room = r.GetAllRooms().FirstOrDefault(x => x.Id == id);
+            if (room == null) return NotFound();
+            return View(room);
+        }
+
+        [HttpPost]
+        public IActionResult EditRoom(Room room)
+        {
+            LoadAllData(out var c, out var t, out var r, out var ts, out var cl);
+            r.RemoveRoom(room.Id);
+            r.AddRoom(room);
+            SaveAllData(c, t, r, ts, cl);
+            return RedirectToAction("Manage");
+        }
+
+        // ==========================================
+        // 3. TEACHERS EDIT & ADD
+        // ==========================================
         [HttpGet] 
         public IActionResult AddTeacher() 
         {
-            LoadAllData(out var c, out var t, out var r, out var ts, out var cl);
-            ViewBag.Courses = c.GetAllCourses(); // Teacher ko course assign karne ke liye list
+            LoadAllData(out var c, out _, out _, out _, out _);
+            ViewBag.Courses = c.GetAllCourses();
             return View();
         }
 
@@ -78,31 +120,51 @@ namespace dsa_project.Controllers
             LoadAllData(out var c, out var t, out var r, out var ts, out var cl);
             var all = t.GetAllTeachers();
             teacher.Id = all.Any() ? all.Max(x => x.Id) + 1 : 1;
-            
-            if (!string.IsNullOrEmpty(AssignedCoursesStr))
-            {
-                try {
-                    teacher.AssignedCourseIds = AssignedCoursesStr
-                        .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(s => int.Parse(s.Trim()))
-                        .ToList();
-                } catch {
-                    ModelState.AddModelError("", "Please enter Course IDs in correct format (e.g., 1, 2, 5)");
-                    ViewBag.Courses = c.GetAllCourses();
-                    return View(teacher);
-                }
-            }
-
+            ProcessTeacherCourses(teacher, AssignedCoursesStr);
             t.AddTeacher(teacher);
             SaveAllData(c, t, r, ts, cl);
             return RedirectToAction("Manage");
         }
 
-        // --- 4. CLASSES ---
+        [HttpGet]
+        public IActionResult EditTeacher(int id)
+        {
+            LoadAllData(out var c, out var t, out _, out _, out _);
+            var teacher = t.GetAllTeachers().FirstOrDefault(x => x.Id == id);
+            if (teacher == null) return NotFound();
+            ViewBag.Courses = c.GetAllCourses();
+            // Assigned IDs ko string mein convert kar rahe hain form ke liye
+            ViewBag.AssignedCoursesStr = teacher.AssignedCourseIds != null ? string.Join(",", teacher.AssignedCourseIds) : "";
+            return View(teacher);
+        }
+
+        [HttpPost]
+        public IActionResult EditTeacher(Teacher teacher, string AssignedCoursesStr)
+        {
+            LoadAllData(out var c, out var t, out var r, out var ts, out var cl);
+            ProcessTeacherCourses(teacher, AssignedCoursesStr);
+            t.RemoveTeacher(teacher.Id);
+            t.AddTeacher(teacher);
+            SaveAllData(c, t, r, ts, cl);
+            return RedirectToAction("Manage");
+        }
+
+        private void ProcessTeacherCourses(Teacher teacher, string input)
+        {
+            if (!string.IsNullOrEmpty(input))
+            {
+                teacher.AssignedCourseIds = input.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                                 .Select(s => int.Parse(s.Trim())).ToList();
+            }
+        }
+
+        // ==========================================
+        // 4. CLASSES EDIT & ADD
+        // ==========================================
         [HttpGet]
         public IActionResult AddClass()
         {
-            LoadAllData(out var c, out var t, out var r, out var ts, out var cl);
+            LoadAllData(out var c, out _, out _, out _, out _);
             ViewBag.Courses = c.GetAllCourses();
             return View();
         }
@@ -120,7 +182,31 @@ namespace dsa_project.Controllers
             return RedirectToAction("Manage");
         }
 
-        // --- 5. DATA MANAGEMENT ---
+        [HttpGet]
+        public IActionResult EditClass(int id)
+        {
+            LoadAllData(out var c, out _, out _, out _, out var cl);
+            var cls = cl.GetAllClasses().FirstOrDefault(x => x.Id == id);
+            if (cls == null) return NotFound();
+            ViewBag.Courses = c.GetAllCourses();
+            ViewBag.CourseIdsInput = cls.CourseIds != null ? string.Join(",", cls.CourseIds) : "";
+            return View(cls);
+        }
+
+        [HttpPost]
+        public IActionResult EditClass(Class cls, string courseIdsInput)
+        {
+            LoadAllData(out var c, out var t, out var r, out var ts, out var cl);
+            if (!string.IsNullOrEmpty(courseIdsInput))
+                cls.CourseIds = courseIdsInput.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => int.Parse(s.Trim())).ToList();
+            
+            cl.RemoveClass(cls.Id);
+            cl.AddClass(cls);
+            SaveAllData(c, t, r, ts, cl);
+            return RedirectToAction("Manage");
+        }
+
+        // --- Rest of the Methods (Manage, Delete, Reset, Generate) ---
         public IActionResult Manage()
         {
             LoadAllData(out var c, out var t, out var r, out var ts, out var cl);
@@ -133,6 +219,11 @@ namespace dsa_project.Controllers
             };
             return View(model);
         }
+
+        public IActionResult DeleteCourse(int id) { LoadAllData(out var c, out var t, out var r, out var ts, out var cl); c.RemoveCourse(id); SaveAllData(c, t, r, ts, cl); return RedirectToAction("Manage"); }
+        public IActionResult DeleteRoom(int id) { LoadAllData(out var c, out var t, out var r, out var ts, out var cl); r.RemoveRoom(id); SaveAllData(c, t, r, ts, cl); return RedirectToAction("Manage"); }
+        public IActionResult DeleteTeacher(int id) { LoadAllData(out var c, out var t, out var r, out var ts, out var cl); t.RemoveTeacher(id); SaveAllData(c, t, r, ts, cl); return RedirectToAction("Manage"); }
+        public IActionResult DeleteClass(int id) { LoadAllData(out var c, out var t, out var r, out var ts, out var cl); cl.RemoveClass(id); SaveAllData(c, t, r, ts, cl); return RedirectToAction("Manage"); }
 
         [HttpGet]
         public IActionResult ResetData()
@@ -153,12 +244,6 @@ namespace dsa_project.Controllers
             }
         }
 
-        public IActionResult DeleteCourse(int id) { LoadAllData(out var c, out var t, out var r, out var ts, out var cl); c.RemoveCourse(id); SaveAllData(c, t, r, ts, cl); return RedirectToAction("Manage"); }
-        public IActionResult DeleteRoom(int id) { LoadAllData(out var c, out var t, out var r, out var ts, out var cl); r.RemoveRoom(id); SaveAllData(c, t, r, ts, cl); return RedirectToAction("Manage"); }
-        public IActionResult DeleteTeacher(int id) { LoadAllData(out var c, out var t, out var r, out var ts, out var cl); t.RemoveTeacher(id); SaveAllData(c, t, r, ts, cl); return RedirectToAction("Manage"); }
-        public IActionResult DeleteClass(int id) { LoadAllData(out var c, out var t, out var r, out var ts, out var cl); cl.RemoveClass(id); SaveAllData(c, t, r, ts, cl); return RedirectToAction("Manage"); }
-
-        // --- 6. FIXED SLOT GENERATION ---
         public IActionResult GenerateDefaultSlots()
         {
             LoadAllData(out var c, out var t, out var r, out var ts, out var cl);
@@ -168,7 +253,6 @@ namespace dsa_project.Controllers
 
             foreach (var day in days)
             {
-                // 1. FIXED LAB SESSIONS (Standard Uni Timing)
                 TimeSpan[] labStarts = { new TimeSpan(8, 30, 0), new TimeSpan(11, 30, 0), new TimeSpan(14, 30, 0) };
                 foreach (var start in labStarts)
                 {
@@ -177,15 +261,10 @@ namespace dsa_project.Controllers
                     });
                 }
 
-                // 2. THEORY SLOTS (Available every hour from 8:30)
                 for (int hour = 8; hour <= 16; hour++)
                 {
                     TimeSpan theoryStart = new TimeSpan(hour, 30, 0);
-                    
-                    // 1-Hour Slot
                     ts.AddTimeSlot(new TimeSlot { Id = id++, Day = day, StartTime = theoryStart, EndTime = theoryStart.Add(TimeSpan.FromHours(1)) });
-
-                    // 2-Hour Slot (stays within uni timing)
                     if (theoryStart.Add(TimeSpan.FromHours(2)) <= new TimeSpan(17, 30, 0))
                     {
                         ts.AddTimeSlot(new TimeSlot { Id = id++, Day = day, StartTime = theoryStart, EndTime = theoryStart.Add(TimeSpan.FromHours(2)) });
@@ -193,7 +272,7 @@ namespace dsa_project.Controllers
                 }
             }
             SaveAllData(c, t, r, ts, cl);
-            TempData["Message"] = "Standard Slots (Labs @ 8:30, 11:30, 14:30) generated!";
+            TempData["Message"] = "Standard Slots generated!";
             return RedirectToAction("Index", "Home");
         }
     }

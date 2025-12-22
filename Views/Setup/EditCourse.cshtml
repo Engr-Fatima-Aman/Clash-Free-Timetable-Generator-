@@ -1,7 +1,7 @@
 @model dsa_project.Models.Course
 
 @{
-    ViewData["Title"] = "Add New Course";
+    ViewData["Title"] = "Edit Course";
 }
 
 <link rel="stylesheet" href="~/css/main.css">
@@ -16,7 +16,7 @@
             <div class="form-steps mb-4">
                 <div class="form-step">
                     <div class="step-number active">1</div>
-                    <div class="step-label">Basic Info</div>
+                    <div class="step-label">Course Info</div>
                 </div>
                 <div class="form-step">
                     <div class="step-number">2</div>
@@ -24,7 +24,7 @@
                 </div>
                 <div class="form-step">
                     <div class="step-number">3</div>
-                    <div class="step-label">Review & Save</div>
+                    <div class="step-label">Review & Update</div>
                 </div>
             </div>
 
@@ -32,22 +32,19 @@
             <div class="form-card form-course">
                 <div class="form-header">
                     <h1 class="form-title">
-                        <i class="fas fa-book"></i>
-                        Add New Course
+                        <i class="fas fa-edit"></i>
+                        Edit Course
                     </h1>
+                    <div class="text-center mt-2" style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">
+                        <i class="fas fa-info-circle"></i>
+                        Editing Course ID: <strong>#@Model.Id</strong>
+                    </div>
                 </div>
 
                 <div class="form-body">
-                    @if (ViewBag.Message != null)
-                    {
-                        <div class="form-alert">
-                            <i class="fas fa-check-circle"></i>
-                            @ViewBag.Message
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="float: right;"></button>
-                        </div>
-                    }
-
-                    <form method="post" id="courseForm">
+                    <form asp-action="EditCourse" method="post" id="editCourseForm">
+                        <input type="hidden" asp-for="Id" />
+                        
                         <div class="form-grid">
                             <!-- Course Title -->
                             <div class="mb-3">
@@ -62,7 +59,7 @@
                                        oninput="updatePreview()" />
                                 <div class="form-hint">
                                     <i class="fas fa-info-circle"></i>
-                                    Enter the complete course title
+                                    Full course title as it appears in curriculum
                                 </div>
                             </div>
 
@@ -82,7 +79,20 @@
                                        oninput="updatePreview()" />
                                 <div class="form-hint">
                                     <i class="fas fa-info-circle"></i>
-                                    Theory courses are usually 3 credits (2h + 1h slots)
+                                    Total credit hours for this course
+                                </div>
+                                
+                                <!-- Credit Type Indicator -->
+                                <div class="room-capacity-info mt-2">
+                                    <div style="font-size: 0.85rem; color: #64748b; white-space: nowrap;">
+                                        Credits:
+                                    </div>
+                                    <div class="capacity-indicator">
+                                        <div class="capacity-fill" id="creditHoursFill" style="width: 0%"></div>
+                                    </div>
+                                    <div style="font-size: 0.85rem; color: #2c3e50; font-weight: 500;">
+                                        <span id="creditHoursText">0</span> hours
+                                    </div>
                                 </div>
                             </div>
 
@@ -93,29 +103,33 @@
                                     Course Type
                                 </label>
                                 <div class="form-type-selector">
-                                    <div class="form-type-option active" onclick="selectCourseType('theory')" id="theoryOption">
+                                    <div class="form-type-option @(!Model.IsLab ? "active" : "")" 
+                                         onclick="selectCourseType('theory')" 
+                                         id="theoryOption">
                                         <i class="fas fa-book"></i>
                                         <div>Theory Course</div>
                                         <small class="text-muted">Regular lecture sessions</small>
                                     </div>
-                                    <div class="form-type-option" onclick="selectCourseType('lab')" id="labOption">
+                                    <div class="form-type-option @(Model.IsLab ? "active" : "")" 
+                                         onclick="selectCourseType('lab')" 
+                                         id="labOption">
                                         <i class="fas fa-flask"></i>
                                         <div>Laboratory Course</div>
                                         <small class="text-muted">Practical/lab sessions</small>
                                     </div>
                                 </div>
-                                <input type="hidden" asp-for="IsLab" id="isLabInput" value="false" />
+                                <input type="hidden" asp-for="IsLab" id="isLabInput" value="@Model.IsLab.ToString().ToLower()" />
                                 <div class="form-hint mt-2">
                                     <i class="fas fa-lightbulb"></i>
                                     <span id="typeHint">
-                                        Theory courses split into 2+1 hour slots. Lab courses require 3-hour continuous slots in Lab rooms.
+                                        @(Model.IsLab ? "Lab courses require 3-hour continuous slots in Lab rooms." : "Theory courses split into 2+1 hour slots.")
                                     </span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Lab Hours Info (Shown only for lab courses) -->
-                        <div class="lab-hours-field" id="labHoursField" style="display: none;">
+                        <div class="lab-hours-field" id="labHoursField" style="@(Model.IsLab ? "display: block;" : "display: none;")">
                             <div class="d-flex align-items-center gap-3">
                                 <div style="font-size: 2rem; color: #e74c3c;">
                                     <i class="fas fa-flask"></i>
@@ -126,23 +140,33 @@
                                         Laboratory Course Information
                                     </h6>
                                     <p class="mb-0" style="color: #666; font-size: 0.9rem;">
-                                        This course will be scheduled as a 3-hour continuous session in a laboratory room.
-                                        Students must be assigned to available lab time slots.
+                                        This course is scheduled as a 3-hour continuous session in a laboratory room.
+                                        Ensure lab rooms are available and have necessary equipment.
                                     </p>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Warning Alert -->
+                        <div class="alert" style="background: rgba(243, 156, 18, 0.1); border-left-color: #f39c12; color: #d35400;">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div>
+                                    <strong>Note:</strong> 
+                                    <span class="ms-1">Changing course type may affect existing timetables. Ensure rooms and schedules are updated accordingly.</span>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Form Actions -->
                         <div class="form-actions">
                             <button type="submit" class="btn-submit">
                                 <i class="fas fa-save"></i>
-                                Save Course
+                                Update Course
                             </button>
-                            <a href="/Setup/Manage" class="btn-back">
-                                <i class="fas fa-arrow-left"></i>
-                                Back to Manage
+                            <a asp-action="Manage" class="btn-back">
+                                <i class="fas fa-times"></i>
+                                Cancel
                             </a>
                         </div>
                     </form>
@@ -154,61 +178,103 @@
                 <div class="card-body">
                     <h5 class="card-title" style="color: #2c3e50;">
                         <i class="fas fa-question-circle text-primary me-2"></i>
-                        Course Information Guide
+                        Course Editing Guidelines
                     </h5>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <h6 class="fw-bold" style="color: #3498db;">
-                                    <i class="fas fa-book me-2"></i>
-                                    Theory Courses
+                                <h6 class="fw-bold" style="color: #e74c3c;">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Important Notes
                                 </h6>
                                 <ul class="list-unstyled small mb-0">
                                     <li class="mb-1">
                                         <i class="fas fa-check text-success me-2"></i>
-                                        Usually 3 credit hours
+                                        Changes affect all assigned classes
                                     </li>
                                     <li class="mb-1">
                                         <i class="fas fa-check text-success me-2"></i>
-                                        Split into 2h + 1h slots
+                                        Type changes require room reassignment
                                     </li>
                                     <li class="mb-1">
                                         <i class="fas fa-check text-success me-2"></i>
-                                        Scheduled in classrooms
+                                        Credit hour changes affect scheduling
                                     </li>
                                     <li>
                                         <i class="fas fa-check text-success me-2"></i>
-                                        Can be scheduled across different days
+                                        Re-generate timetable after updates
                                     </li>
                                 </ul>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <h6 class="fw-bold" style="color: #e74c3c;">
-                                    <i class="fas fa-flask me-2"></i>
-                                    Lab Courses
+                                <h6 class="fw-bold" style="color: #27ae60;">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    Best Practices
                                 </h6>
                                 <ul class="list-unstyled small mb-0">
                                     <li class="mb-1">
                                         <i class="fas fa-check text-success me-2"></i>
-                                        Usually 1 credit hour
+                                        Update before generating schedules
                                     </li>
                                     <li class="mb-1">
                                         <i class="fas fa-check text-success me-2"></i>
-                                        3-hour continuous slot
+                                        Verify room availability for labs
                                     </li>
                                     <li class="mb-1">
                                         <i class="fas fa-check text-success me-2"></i>
-                                        Scheduled in laboratories
+                                        Check teacher assignments
                                     </li>
                                     <li>
                                         <i class="fas fa-check text-success me-2"></i>
-                                        Requires special equipment
+                                        Review changes in preview
                                     </li>
                                 </ul>
                             </div>
                         </div>
+                    </div>
+                    <div class="mt-3">
+                        <h6 class="fw-bold" style="color: #2c3e50;">
+                            <i class="fas fa-chart-pie me-2"></i>
+                            Course Type Standards
+                        </h6>
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Course Type</th>
+                                    <th>Typical Credits</th>
+                                    <th>Slot Duration</th>
+                                    <th>Room Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Theory Course</td>
+                                    <td>3 credits</td>
+                                    <td>2h + 1h slots</td>
+                                    <td>Classroom</td>
+                                </tr>
+                                <tr>
+                                    <td>Lab Course</td>
+                                    <td>1 credit</td>
+                                    <td>3h continuous</td>
+                                    <td>Laboratory</td>
+                                </tr>
+                                <tr>
+                                    <td>Workshop</td>
+                                    <td>2 credits</td>
+                                    <td>2h continuous</td>
+                                    <td>Lab/Classroom</td>
+                                </tr>
+                                <tr>
+                                    <td>Seminar</td>
+                                    <td>1 credit</td>
+                                    <td>1h slot</td>
+                                    <td>Seminar Room</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -219,9 +285,32 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize course type selection
-        const isLabCheckbox = document.getElementById('isLabInput');
+        const isLabInput = document.getElementById('isLabInput');
         const labHoursField = document.getElementById('labHoursField');
         const typeHint = document.getElementById('typeHint');
+        const creditHoursFill = document.getElementById('creditHoursFill');
+        const creditHoursText = document.getElementById('creditHoursText');
+        
+        // Update credit hours indicator
+        function updateCreditHoursIndicator(hours) {
+            const creditHours = parseInt(hours) || 0;
+            
+            // Calculate percentage (max 5 for 100%)
+            const percentage = Math.min((creditHours / 5) * 100, 100);
+            creditHoursFill.style.width = percentage + '%';
+            creditHoursText.textContent = creditHours;
+            
+            // Update color based on credit hours
+            if (creditHours === 1) {
+                creditHoursFill.style.background = 'linear-gradient(90deg, #3498db, #2980b9)';
+            } else if (creditHours === 2) {
+                creditHoursFill.style.background = 'linear-gradient(90deg, #2ecc71, #27ae60)';
+            } else if (creditHours === 3) {
+                creditHoursFill.style.background = 'linear-gradient(90deg, #f39c12, #e67e22)';
+            } else if (creditHours >= 4) {
+                creditHoursFill.style.background = 'linear-gradient(90deg, #e74c3c, #c0392b)';
+            }
+        }
         
         // Function to select course type
         window.selectCourseType = function(type) {
@@ -247,25 +336,46 @@
             updatePreview();
         };
         
+        // Initialize course type based on model
+        if (@Model.IsLab.ToString().ToLower() === 'true') {
+            selectCourseType('lab');
+        } else {
+            selectCourseType('theory');
+        }
+        
         // Update preview function
         window.updatePreview = function() {
             const titleInput = document.querySelector('input[asp-for="Title"]');
             const hoursInput = document.querySelector('input[asp-for="CreditHours"]');
             const isLab = isLabInput.value === 'true';
+            const hours = parseInt(hoursInput.value) || @Model.CreditHours;
             
             // Update preview values
-            document.getElementById('previewTitle').textContent = titleInput.value || '-';
-            document.getElementById('previewHours').textContent = hoursInput.value ? hoursInput.value + ' credits' : '-';
+            document.getElementById('previewTitle').textContent = titleInput.value || '@Model.Title';
+            document.getElementById('previewHours').textContent = hours ? hours + ' credits' : '@Model.CreditHours credits';
             document.getElementById('previewType').textContent = isLab ? 'Laboratory' : 'Theory';
             document.getElementById('previewDuration').textContent = isLab ? '3 hours continuous' : 'Split into multiple slots';
             document.getElementById('previewRoomType').textContent = isLab ? 'Laboratory Room' : 'Regular Classroom';
             
-            // Update credit hour hint based on type
-            if (isLab) {
-                const hours = parseInt(hoursInput.value) || 0;
-                if (hours > 1) {
-                    document.querySelector('input[asp-for="CreditHours"]').nextElementSibling.innerHTML = 
-                        '<i class="fas fa-exclamation-triangle text-warning"></i> Lab courses typically have 1 credit hour.';
+            // Update credit hours indicator
+            updateCreditHoursIndicator(hours);
+            
+            // Show warning for lab courses with high credits
+            if (isLab && hours > 2) {
+                const warning = document.querySelector('.alert');
+                if (warning) {
+                    warning.innerHTML = `
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div>
+                                <strong>Warning:</strong> 
+                                <span class="ms-1">Lab courses with ${hours} credit hours are unusual. Lab courses typically have 1 credit hour.</span>
+                            </div>
+                        </div>
+                    `;
+                    warning.style.background = 'rgba(231, 76, 60, 0.1)';
+                    warning.style.borderLeftColor = '#e74c3c';
+                    warning.style.color = '#c0392b';
                 }
             }
         };
@@ -274,7 +384,7 @@
         updatePreview();
         
         // Form validation
-        const form = document.getElementById('courseForm');
+        const form = document.getElementById('editCourseForm');
         form.addEventListener('submit', function(e) {
             const title = document.querySelector('input[asp-for="Title"]').value;
             const hours = document.querySelector('input[asp-for="CreditHours"]').value;
@@ -294,8 +404,38 @@
             }
             
             const isLab = isLabInput.value === 'true';
+            const originalIsLab = @Model.IsLab.ToString().ToLower() === 'true';
+            const originalHours = @Model.CreditHours;
+            
+            // Warn about type changes
+            if (isLab !== originalIsLab) {
+                if (!confirm('⚠️ Warning: Changing course type from ' + (originalIsLab ? 'Lab' : 'Theory') + ' to ' + (isLab ? 'Lab' : 'Theory') + 
+                           '.\n\nThis affects:\n• Room assignments\n• Slot durations\n• Teacher schedules\n\nAre you sure you want to change the course type?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            
+            // Warn about credit hour changes
+            if (creditHours !== originalHours) {
+                if (!confirm('⚠️ Note: Changing credit hours from ' + originalHours + ' to ' + creditHours + 
+                           '.\n\nThis affects scheduling slots.\n\nContinue?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            
+            // Validate lab course credit hours
             if (isLab && creditHours > 2) {
-                if (!confirm('⚠️ Warning: Lab courses with more than 2 credit hours are unusual.\n\nAre you sure you want to proceed?')) {
+                if (!confirm('⚠️ Warning: Lab courses with more than 2 credit hours are unusual.\n\nLab courses typically have 1 credit hour.\n\nAre you sure?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            
+            // Validate theory course credit hours
+            if (!isLab && creditHours === 1) {
+                if (!confirm('⚠️ Note: Theory courses with only 1 credit hour are unusual.\n\nTheory courses typically have 3 credit hours.\n\nContinue?')) {
                     e.preventDefault();
                     return false;
                 }
@@ -314,8 +454,8 @@
             `;
             
             const formBody = document.querySelector('.form-body');
-            const existingAlert = formBody.querySelector('.form-alert');
-            if (existingAlert) {
+            const existingAlert = formBody.querySelector('.alert');
+            if (existingAlert && !existingAlert.classList.contains('form-alert')) {
                 existingAlert.remove();
             }
             
@@ -341,13 +481,24 @@
             });
         });
         
-        // Auto-select type based on credit hours
+        // Auto-suggest credit hours based on course type
         const hoursInput = document.querySelector('input[asp-for="CreditHours"]');
-        hoursInput.addEventListener('blur', function() {
-            const hours = parseInt(this.value);
-            if (hours === 1) {
+        hoursInput.addEventListener('focus', function() {
+            const isLab = isLabInput.value === 'true';
+            if (isLab) {
+                this.setAttribute('placeholder', 'Typically 1 credit for lab courses');
+            } else {
+                this.setAttribute('placeholder', 'Typically 3 credits for theory courses');
+            }
+        });
+        
+        // Auto-detect course type from title
+        const titleInput = document.querySelector('input[asp-for="Title"]');
+        titleInput.addEventListener('blur', function() {
+            const title = this.value.toLowerCase();
+            if (title.includes('lab') || title.includes('practical') || title.includes('workshop')) {
                 selectCourseType('lab');
-            } else if (hours >= 2 && hours <= 5) {
+            } else if (title.includes('theory') || title.includes('lecture') || title.includes('seminar')) {
                 selectCourseType('theory');
             }
         });
