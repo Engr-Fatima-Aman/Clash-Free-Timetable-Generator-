@@ -13,7 +13,11 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("dsa project")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+<<<<<<< Updated upstream
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+085e49569c6b0a5aac5d80c3e8f80f914179de10")]
+=======
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+93313b069a4e1d87cf756955592dcd410dfce999")]
+>>>>>>> Stashed changes
 [assembly: System.Reflection.AssemblyProductAttribute("dsa project")]
 [assembly: System.Reflection.AssemblyTitleAttribute("dsa project")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,5 +1,6 @@
 @model dsa_project.Models.Teacher
 
+<<<<<<< Updated upstream
 @{
     ViewData["Title"] = "Add New Teacher";
 }
@@ -448,5 +449,67 @@
                 updateFacultyType();
             }
         });
+=======
+<div class="container mt-5">
+    <h2>Add Teacher</h2>
+    @if(ViewBag.Message != null)
+    { 
+        <div class="alert alert-success">@ViewBag.Message</div> 
+    }
+    
+    <form method="post">
+        <div class="mb-3">
+            <label>Name:</label> 
+            <input asp-for="Name" class="form-control" required />
+        </div>
+
+        <div class="mb-3">
+            <label>Employee ID:</label> 
+            <input asp-for="EmployeeId" class="form-control" required />
+        </div>
+
+        <div class="mb-3">
+            <label>Type:</label>
+            <select asp-for="Type" class="form-control" id="teacherType" onchange="toggleSlots()" required>
+                <option value="Permanent">Permanent</option>
+                <option value="Visiting">Visiting</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label>Assigned Course IDs (comma separated, e.g. 1,2):</label> 
+            <input name="AssignedCoursesStr" class="form-control" required />
+        </div>
+
+        <div class="mb-3" id="slotsContainer" style="display:none;">
+            <label>Available Slot IDs (comma separated, e.g. 1,2,3):</label> 
+            <input name="AvailableSlotsStr" class="form-control" placeholder="Required for Visiting Faculty" />
+            <small class="text-muted">Enter slot IDs for Visiting Faculty availability.</small>
+        </div>
+
+        <button class="btn btn-success mt-2">Save</button>
+        <a href="/Setup/Manage" class="btn btn-secondary mt-2">Back</a>
+    </form>
+</div>
+
+<script>
+    function toggleSlots() {
+        var type = document.getElementById("teacherType").value;
+        var container = document.getElementById("slotsContainer");
+        
+        // Only show if 'Visiting' is selected
+        if (type === "Visiting") {
+            container.style.display = "block";
+        } else {
+            container.style.display = "none";
+            // Optional: Clear the input when hiding so we don't save accidental data
+            document.querySelector("input[name='AvailableSlotsStr']").value = "";
+        }
+    }
+
+    // Run on load to set initial state (e.g. if page reloads with data)
+    document.addEventListener("DOMContentLoaded", function() {
+        toggleSlots();
+>>>>>>> Stashed changes
     });
 </script>

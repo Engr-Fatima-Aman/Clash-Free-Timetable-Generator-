@@ -1,8 +1,14 @@
 {
   "version": 2,
+<<<<<<< Updated upstream
   "dgSpecHash": "yzpLmvbsm7Y=",
   "success": true,
   "projectFilePath": "C:\\University\\Sem3\\dsa-project\\dsa project.csproj",
+=======
+  "dgSpecHash": "kuVJQlHjfw4=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\User\\Documents\\GitHub\\dsa-project\\dsa project.csproj",
+>>>>>>> Stashed changes
   "expectedPackageFiles": [],
   "logs": []
 }
